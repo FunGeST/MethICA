@@ -1,0 +1,25 @@
+Package: lea
+Title: Methylation signature analysis with ICA project R package
+Version: 0.0
+Authors@R: 
+    person(given = "Lea",
+           family = "Meunier",
+           role = c("aut", "cre"),
+           email = "lea.marie.meunier@gmail.com")
+Description: use independent components analysis (ICA) on methylation data
+    to extract epigenetics signature and provide statistical analysis and
+    representation to help interpretation
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.0
+Imports: 
+    stringr,
+    fastICA,
+    gridExtra,
+    cowplot,
+    ggplot2,
+    RColorBrewer,
+    plotrix,
+    broom
