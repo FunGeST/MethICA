@@ -136,7 +136,7 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 # argument
 # item >> MC_object >> Object return by mc.extract
 # item >> method >> choose between "threshold" selection of CpG above a threshold or number selection of most contributing CpG
-# item >> threshold >> threshold value, default select value where 5% of all CpG in all components are higher
+# item >> threshold >> threshold value, default select value where 5 percent of all CpG in all components are higher
 # item >> number >> number or most contributingg CpG
 # value >> return list with active CpG for each component
 # author >> Lea Meunier
@@ -175,7 +175,7 @@ mc.active.CpG <- function(MC_object, method = c("threshold", "number"), threshol
 # item >> method >> choose between "absolute" selection of most contributing Samples in the component (in absolute value) and "reference", the samples with bval of active CpG farthest for bval in ref samples
 # item >> bval >> bval methylation data
 # item >> MC_contrib_CpG >> most contributing CpG of each comp compute with mc.active.CpG function
-# item >> number >> nomber of samples selected (default : 10%)
+# item >> number >> nomber of samples selected (default : 10 percent)
 # item >> ref >> liste of samples use like reference
 # value >> return liste of active sample in each component
 # author >> Lea Meunier

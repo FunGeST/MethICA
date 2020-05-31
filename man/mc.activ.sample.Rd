@@ -8,7 +8,7 @@
 \item{method}{choose between "absolute" selection of most contributing Samples in the component (in absolute value) and "reference", the samples with bval of active CpG farthest for bval in ref samples}
 \item{bval}{bval methylation data}
 \item{MC_contrib_CpG}{most contributing CpG of each comp compute with mc.active.CpG function}
-\item{number}{nomber of samples selected (default : 10%)}
+\item{number}{nomber of samples selected (default : 10 percent)}
 \item{ref}{liste of samples use like reference}
 }
 \value{return liste of active sample in each component

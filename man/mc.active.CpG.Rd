@@ -6,7 +6,7 @@
 \arguments{
 \item{MC_object}{Object return by mc.extract}
 \item{method}{choose between "threshold" selection of CpG above a threshold or number selection of most contributing CpG}
-\item{threshold}{threshold value, default select value where 5% of all CpG in all components are higher}
+\item{threshold}{threshold value, default select value where 5 percent of all CpG in all components are higher}
 \item{number}{number or most contributingg CpG}
 }
 \value{return list with active CpG for each component
