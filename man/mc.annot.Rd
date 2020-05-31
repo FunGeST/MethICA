@@ -2,7 +2,7 @@
 \alias{mc.annot}
 \title{mc.annot}
 \description{compute uni and multivariate analysis of component and annotations}
-\usage{mc.annot(MC_object, annot, selcol, save=FALSE, output.directory, selcol_Multi=selcol)}
+\usage{mc.annot(MC_object, annot, selcol=colnames(annot), save=FALSE, output.directory, selcol_Multi=selcol, seuil_multi=0.001)}
 \arguments{
 \item{MC_object}{Object return by mc.extract}
 \item{annot}{annotation table}
