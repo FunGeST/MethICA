@@ -331,9 +331,15 @@ kbd {
 
 <body>
 
-<p>Abstract</p>
+<h1 id="toc_0">MethICA</h1>
 
-<h1 id="toc_0">Installation</h1>
+<p>Methylation signature analysis with ICA project R package</p>
+
+<p>Description: use independent components analysis (ICA) on methylation data to extract epigenetics signature and provide statistical analysis and representation to help interpretation</p>
+
+<h2 id="toc_1">Installation</h2>
+
+<h1 id="toc_2"></h1>
 
 <p>Install from the GitHub repository using devtools:</p>
 
@@ -341,7 +347,9 @@ kbd {
 library(devtools)
 devtools::install_github(&quot;FunGeST/MethICA&quot;)</code></pre></div>
 
-<h1 id="toc_1">Input files</h1>
+<h2 id="toc_3">Input files</h2>
+
+<h1 id="toc_4"></h1>
 
 <p>For the extraction of methylation signature <em>MethICA</em> requires one mandatory input file -- a <strong>methylation level</strong> file (bval) describing methylation level of CpG (row) in the samples series (column). For the representation to help the interpretation of methylation signature, a further two files are required -- a <strong>CpG annotation</strong> file with interest CpG information, and a minimal <strong>sample annotation</strong> file.</p>
 
@@ -350,8 +358,8 @@ devtools::install_github(&quot;FunGeST/MethICA&quot;)</code></pre></div>
 <p><code>1]. bval</code>: <strong>methylation level data</strong></p>
 
 <ul>
-<li>rownames : CpG id</li>
-<li>colnames : Samples id</li>
+<li><code>Rownames</code> : CpG id</li>
+<li><code>Colnames</code> : Samples id</li>
 </ul>
 
 <p><strong>Optional: (the header is required, but the order of the columns can change)</strong></p>
@@ -359,16 +367,16 @@ devtools::install_github(&quot;FunGeST/MethICA&quot;)</code></pre></div>
 <p><code>2]. CpG annotation</code>:</p>
 
 <ul>
-<li><code>TargetID</code>: CpG id. Any alphanumeric string.</li>
-<li><code>state</code>: Chromatine domain (active/inactive)</li>
-<li><code>domain</code>: Chromatine domain (ROADMAP domain)</li>
-<li><code>CpG_context</code>: Methylation domain (HMD/PMD/LMR/UMR)</li>
-<li><code>cgi_feature</code>: CpG density (Island, Shore, Shelf, out of cgi)</li>
-<li><code>gene_feature</code>: Gene feature (Body, TSS500, out)</li>
-<li><code>gene_name</code>: Gene name</li>
-<li><code>decile</code>: decile of timing of replication (1: early --&gt; 10: late)</li>
-<li><code>CHROM</code>: Chromosome. Between chr1 and chr22 or the chrX or chrY (&#39;chr&#39; prefix required).</li>
-<li><code>MAPINFO</code> : CpG position (CHROM and MAPINFO necessary only to add chromatin annotation to the table with chromatin.feature function)</li>
+<li><code>TargetID</code> : CpG id. Any alphanumeric string.</li>
+<li><code>state</code> : Chromatine domain (active/inactive)</li>
+<li><code>domain</code> : Chromatine domain (ROADMAP domain)</li>
+<li><code>CpG_context</code> : Methylation domain (HMD/PMD/LMR/UMR)</li>
+<li><code>cgi_feature</code> : CpG density (Island, Shore, Shelf, out of cgi)</li>
+<li><code>gene_feature</code> : Gene feature (Body, TSS500, out)</li>
+<li><code>gene_name</code> : Gene name</li>
+<li><code>decile</code> : decile of timing of replication (1: early --&gt; 10: late)</li>
+<li><code>CHROM</code> : Chromosome. Between chr1 and chr22 or the chrX or chrY (&#39;chr&#39; prefix required).</li>
+<li><code>Rownames</code> : MAPINFO : CpG position (CHROM and MAPINFO necessary only to add chromatin annotation to the table with chromatin.feature function)</li>
 </ul>
 
 <p><code>3]. annot_data</code>: <strong>sample annotation data</strong></p>
@@ -377,14 +385,18 @@ devtools::install_github(&quot;FunGeST/MethICA&quot;)</code></pre></div>
 <li><code>Sample</code>: Sample identifier. Any alphanumeric string.</li>
 </ul>
 
-<h1 id="toc_2">Running MethICA</h1>
+<h2 id="toc_5">Running MethICA</h2>
+
+<h1 id="toc_6"></h1>
 
 <ul>
-<li>The <a href="https://github.com/FunGeST/MethICA">RUNNING<strong>MethHICA</strong>EXAMPLE</a> folder contains an example dataset and an R script of a typical MethICA analysis using this data. Please try!</br></li>
+<li>The <a href="https://github.com/FunGeST/MethICA">RUNNING_METHICA_EXAMPLE</a> folder contains an example dataset and an R script of a typical MethICA analysis using this data. Please try!</br></li>
 <li>[<em>Introduction to MethICA</em>] provides a comprehensive example of the MethICA workflow with detailed  explanations of each function.</br> </li>
 </ul>
 
-<h1 id="toc_3">License</h1>
+<h2 id="toc_7">License</h2>
+
+<h1 id="toc_8"></h1>
 
 <p>Copyright (C) 2020 Léa Meunier</p>
 

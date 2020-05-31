@@ -1,0 +1,147 @@
+---
+title: "Introduction to MethICA"
+author: "Lea Meunier"
+date: "5/31/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+<p>DNA methylation changes are widespread in human cancers, but the underlying molecular mechanisms remain incompletely understood. We developed an innovative statistical framework, MethICA, leveraging independent component analysis to identify sources of DNA methylation changes in tumors. The package includes a function that uses independent component analysis to extract methylation signatures from bval data, as well as functions to calculate associations with sample annotations and CpG characteristics. The package also provides representations that facilitate the interpretation of signatures. This document, paired with the “MethICA_examples_script.R” demo script, outlines the typical workflow for the analyis of thegenomic data from a series of tumours.</p>
+
+# Package
+
+Report issues at <https://github.com/FunGeST/MethICA>.
+
+
+\newpage
+
+# Introduction
+
+
+# Installation Instructions
+
+The latest version of the package can be installed from the FunGeST GitHub repository using devtools:
+```{r install, eval = FALSE, echo = TRUE}
+install.packages("devtools")
+library(devtools)
+devtools::install_github("FunGeST/MethICA")
+
+```
+# Dependencies
+
+<p>The R packages stringr, fastICA, cowplot, ggplot2, RColorBrewer, plotrix and broom are required to perform MethICA analysis</p>
+
+# Input data
+
+Input files are necessary to perform the core MethICA analyses:
+<ul>
+<li>Bval: methylation level of CpG (rownames) in samples (colnames)
+<li>CpG annotation: File listing CpG information. 
+<li>Sample annotation: Minimal sample annotation data.
+</ul>
+
+<p>Please refer to the example files provided with the package for the correct format. You can also check out the README file for further information about the formats of the input files</p>
+
+
+
+## loading methylation data and annotations
+
+Once installed, load the package and the data and you’re ready to go! 
+```{r chargepackage, eval = FALSE, echo = TRUE}
+> # Load Palimpsest package
+> library(Palimpsest)
+```
+
+Next we charge input data, and the desired output directory.
+```{r chargedata, eval = FALSE, echo = TRUE}
+> # define input directory containing example dataset> 
+> datadir <- "MethICA/RUNNING_MethICA_EXAMPLE/LICAFR"
+>
+> # define output directory> 
+> output.directory <- "~/Results/"> 
+> if(!file.exists()){
+>  dir.create(output.directory)
+> }
+```
+
+We provide example input datasets with this package in the data directory, from our paper, which can be loaded as follows:
+```{r chargeLICAFR, eval = FALSE, echo = TRUE}
+
+> # carge example dataset> 
+> bval = load.RData(file.path(datadir, 'RUNNING_MethICA_exemple/LICAFR/bval.Rdata'))
+> annot = load.RData(file.path(datadir, 'RUNNING_MethICA_exemple/LICAFR/LICAFR_annot.RData'))
+>
+> # Select most variant CpG sites 
+> NmostVar = 200000
+> mysd <- apply(bval,1,sd)
+> sel <- order(mysd,decreasing=T)[1:NmostVar]
+> # Reduce bval and CpG_feature matrix
+> bval <- bval[sel,];dim(bval)
+> CpG_feature <- CpG_feature[rownames(bval),]
+```
+
+
+## Preparing CpG feature input data
+
+MethICA works with CpG annotation. Ensure that you choce the appropriate reference annotation for your data. The CpG_feature.Rdata provided in the package correspond to the chromatin annotations for the hepatocellular carcinoma sample study. This table was generated with the function ??? which takes different inputs for each annotation : 
+<ul>
+<li>state : Chromatine domain (active/inactive) from <>
+<li>domain : Chromatine domain (ROADMAP domain) from <>
+<li>CpG_context : Methylation domain (HMD/PMD/LMR/UMR) from <>
+<li>cgi_feature : CpG density (Island, Shore, Shelf, out of cgi) from <>
+<li>gene_feature : Gene feature (Body, TSS500, out) from <>
+<li>gene_name : Gene name from <>
+<li>decile : decile of timing of replication (1: early --> 10: late) from <>
+</ul>
+
+```{r CpG_feature, eval = FALSE, echo = TRUE}
+> # Annotate CpG table with various epigenomic features
+> #CpG_table = load.RData('~/Google Drive/MethICA/data/CPG_feature_Illumina.RData')
+> #CpG_feature = chromatin.feature(CpG_table = CpG_table, file_CpG_context = "MethICA/data/GSE113405_LIV_ADLT.MethylSeekR.segments.bed", name_col_CpG_context = "CpG_context", file_chrom_state = 'MethICA/data/cst18_liver.RData', name_col_chrom_state = c("state", "active"), file_CGI = "MethICA/data/CGI-based_features_hg19.txt", name_col_CGI ="cgi_feature", file_genes = "MethICA/data/Gene-based_features_hg19.txt", name_col_genes = c("gene_name", "gene_feature"), file_replication ="MethICA/data/HepG2_replication_domains.RData", name_col_replication = "decile", add_seq_info = TRUE, save = TRUE, output.directory = output.directory)
+```
+
+# Extract Methylation signature with ICA
+
+Perform Independent signature analysis (ICA) with function mc_extract 
+<ul>
+<li> input: bval matrix 
+<li> outputs: MC object with two matrices giving the contribution of CpGs and samples to each component and one vector giving components stability. If compute_stability = TRUE Perform n ICA, compute stability (recommended) and choose the most stable iteration, if compute_stability = FALSE, keep the first itteration and return NA in stability vector
+
+```{r ICA, eval = FALSE, echo = TRUE}
+> MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iteration = 100, output.directory = output.directory, save = TRUE)
+```
+
+Each signature is characterized by a contribution value of each CpG and an activity in the different samples. To facilitate the interpretation of the components, the groups of CpGs that are influential in each component and the samples in which the components are highly active are determined.
+
+```{r contributing, eval = FALSE, echo = TRUE}
+> # Extract the most différentially methylated samples for each MC
+> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE))
+> 
+> # Represent methylation changes in most contributing tumors vs. normal samples
+> mc.change(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+```
+
+# Calculation and visualization of the characteristics of the contributing CpGs in the components
+
+```{r enrich_CpG, eval = FALSE, echo = TRUE}
+> # Association of MCw with (epi)genomic characteristics
+> enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.directory, CpG_feature = CpG_feature)
+```
+
+# Association with sample annotations
+
+```{r assos_annot, eval = FALSE, echo = TRUE}
+> # Association of MCs with clinical and molecular features
+> Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
+```
+
+# Extract Methylation signature with ICA
+
+
