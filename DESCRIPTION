@@ -19,4 +19,5 @@ Imports:
     ggplot2,
     RColorBrewer,
     plotrix,
-    broom
+    broom,
+    corrplot
