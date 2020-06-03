@@ -255,16 +255,16 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			
 			p1 = ggplot2::ggplot(data= df_pos) + ggplot2::ggtitle(paste0("Positive contribing Sample ", comp )) + 
 			ggplot2::xlab("bval in reference samples") + ggplot2::ylab("bval in tumors samples") +
-			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.line = element_blank()) + 
-    		ggplot2::stat_binhex(bins = 25, aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkred") +
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x2, yend=y2))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x4, yend=y4))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x2, y=y2, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x3, y=y3, xend=x4, yend=y4))
+			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
+          panel.grid.major = ggplot2::element_blank(),
+          panel.grid.minor = ggplot2::element_blank(),
+          axis.line = ggplot2::element_blank()) + 
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkred") +
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x2, yend=y2))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x4, yend=y4))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x3, yend=y3))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x2, y=y2, xend=x3, yend=y3))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))
 			
 		}else{
 			bval_T_pos = NA
@@ -276,16 +276,16 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			
 			p2 = ggplot2::ggplot(data= df_neg) + ggplot2::ggtitle(paste0("Negative contribing Sample ", comp )) + 
 			ggplot2::xlab("bval in reference samples") + ggplot2::ylab("bval in tumors samples") +
-			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          axis.line = element_blank()) + 
-    		ggplot2::stat_binhex(bins = 25, aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkblue") +
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x2, yend=y2))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x4, yend=y4))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x1, y=y1, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x2, y=y2, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=aes(x=x3, y=y3, xend=x4, yend=y4))
+			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
+          panel.grid.major = ggplot2::element_blank(),
+          panel.grid.minor = ggplot2::element_blank(),
+          axis.line = ggplot2::element_blank()) + 
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkblue") +
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x2, yend=y2))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x4, yend=y4))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x3, yend=y3))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x2, y=y2, xend=x3, yend=y3))+
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))
 		}else{
 			bval_T_neg = NA
 		}
@@ -328,7 +328,7 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 	
 	order_feature = c("island", "shore", "shelf", "out")
 	color_feature =c("#7D0E3C", "#FF584E", "#FFA576", "#B1FADA")
-	color_decile = c(brewer.pal(9,"Blues"), "#05224C")
+	color_decile = c(RColorBrewer::brewer.pal(9,"Blues"), "#05224C")
 	order_active = c("active", "inactive")
 	color_active = c("#1B1E26", "#E7E8E2")
 	ch.states <- c("1_TssA", "2_TssFlnk", "3_TssFlnkU", "4_TssFlnkD", "5_Tx", "6_TxWk", "7_EnhG1", "8_EnhG2", "9_EnhA1", "10_EnhA2", "11_EnhWk", "12_ZNF/Rpts", "13_Het", "14_TssBiv", "15_EnhBiv", "16_ReprPC", "17_ReprPCWk", "18_Quies")
@@ -429,7 +429,7 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
     
     for(comp in colnames(contrib)){
 		for(annot_test in selcol){
-			tmp <- tidy(lm(contrib[,comp] ~ annotS[, annot_test]))
+			tmp <- broom::tidy(lm(contrib[,comp] ~ annotS[, annot_test]))
 			pval[annot_test, comp] <- min(tmp[grep("annotS\\[, annot_test\\]",tmp$term),"p.value"])
 		}
 	}
@@ -442,15 +442,15 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
     
         
 	for(sig in colnames(pval)){
-		print(sig)
+
 		sign.fac <- intersect(colnames(annotS)[which(pval[,sig] < seuil_multi)], selcol_Multi)
-		print(sign.fac)
+
 		if(length(sign.fac)>0){
 			formula <- paste0("contrib[,sig] ~ annotS$", sign.fac[1])
 			if(length(sign.fac)>1){
 				for(fac in sign.fac[2:length(sign.fac)])	formula <- paste(c(formula," + annotS$",as.character(fac)),collapse="")
 			}
-			tmp <- tidy(lm(as.formula(formula)))
+			tmp <- broom::tidy(lm(as.formula(formula)))
 			tmp$Signature <- sig
 			if(sig==colnames(pval)[1])	multiv <- tmp	else		multiv <- rbind(multiv,tmp)
 		}

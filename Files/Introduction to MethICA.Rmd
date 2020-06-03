@@ -160,13 +160,25 @@ Example of generated figure for MC7 component:
 
 # Association with sample annotations
 
+<p>The final step in interpreting the components is to see in which samples they are active and whether these samples have anything in common at the clinical or molecular level. For this purpose the function mc.annot allows to perform a univariate statistical analysis with linear regression to determine the annotations significantly associated with MC. The second part of this function allows a multivariate analysis to be performed to see which annotations are significantly associated with the first statistical analysis and which may be most related.</p>
+
 ```{r assos_annot, eval = FALSE, echo = TRUE}
 > # Association of MCs with clinical and molecular features
 > Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
 ```
 
 Example of possible representation for association between annotations and components: 
-![methylation change](./CpG_feature.png){width=80% height=80%}
+![methylation change](./corrplot.png){width=90% height=90%}
+<p>p-value circle/color legend (see echelle_log on the MethICA_example_script.R)<p>
+<ul>
+<li>1 = 1
+<li>0.1 = 17
+<li>0.05 = 22
+<li>0.01 = 33
+<li>1.0 10-4 = 65
+<li>1.0 10-6 = 96
+<li>1.0 10-8 = 128
+<li>0 = 160
+</ul>
 
-
-
+![](./MC13_vs_annot.png){width=30% height=30%}
