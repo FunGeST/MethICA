@@ -167,7 +167,7 @@ Example of generated figure for MC7 component:
 > Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
 ```
 
-Example of possible representation for association between annotations and components: 
+Example of possible representation for association between annotations and components (left = univariate, rigth = multivariate): 
 ![methylation change](./corrplot.png){width=90% height=90%}
 <p>p-value circle/color legend (see echelle_log on the MethICA_example_script.R)<p>
 <ul>
