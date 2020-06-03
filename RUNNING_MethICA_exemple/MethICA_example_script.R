@@ -72,10 +72,39 @@ enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.director
 # Outputs : univariate and multivariate p-value tables.
 # We can then give a few examples of downstream representation of significant associations (boxplot, correlation plot etc.) but we will not provide dedicated functions.
 
+
+
 Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
+
+#Exemple of representation
+#boxplot
 boxplot(MC_object$Sample_contrib[,"MC13"]~ annot[,"CTNNB1.alt"], col = c("grey30", "grey95"), ylab = "Samples contribution", xlab = "CTNNB1 status", main = "MC13 vs CTNNB1 status")
 
-pvaltab_mol = as.matrix(factoall(Samples_association$pval_uni[2:ncol(Samples_association$pval_uni)]))
+
+#corrplot for univariate analysis
+pvaltab_mol = as.matrix(factoall(Samples_association$pval_uni[,2:ncol(Samples_association$pval_uni)]))
+#need to convert p-value in entier number for the corrplot function
+echelle_log = 10^-(seq(0,10, length.out=160)) 
+echelle_log[length(echelle_log)] = 0 
+echelle_log = as.numeric(echelle_log)
+#scale for the corrplot function
+names(echelle_log) = 1:160
+
+#assign each p-value to the scale
+tmp_mat = pvaltab_mol
+for(i in 1:ncol(pvaltab_mol)){
+	for(j in 1:nrow(pvaltab_mol)){
+		tmp_mat[j,i] = as.numeric(names(echelle_log[which(echelle_log <(pvaltab_mol[j,i]))])[1])
+	}
+}
+class(tmp_mat)
+#use the function 
+corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black')
+
+#same for for multivariate analysis
+pvaltab_mol = as.matrix(factoall(Samples_association$pval_multi))
+#replace NA by 1
+pvaltab_mol[which(is.na(pvaltab_mol))]=1
 echelle_log = 10^-(seq(0,10, length.out=160)) 
 echelle_log[length(echelle_log)] = 0 
 echelle_log = as.numeric(echelle_log)
@@ -88,7 +117,9 @@ for(i in 1:ncol(pvaltab_mol)){
 	}
 }
 class(tmp_mat)
-corrplot::corrplot(tmp_mat, is.corr=FALSE)
+corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black')
+
+
 
 
 
