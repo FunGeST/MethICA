@@ -55,14 +55,14 @@ Input files are necessary to perform the core MethICA analyses:
 
 Once installed, load the package and the data and you’re ready to go! 
 ```{r chargepackage, eval = FALSE, echo = TRUE}
-> # Load Palimpsest package
-> library(Palimpsest)
+> # Load MethICA package
+> library(MethICA)
 ```
 
 Next we charge input data, and the desired output directory.
 ```{r chargedata, eval = FALSE, echo = TRUE}
 > # define input directory containing example dataset> 
-> datadir <- "MethICA/RUNNING_MethICA_EXAMPLE/LICAFR"
+> datadir <- "~/Documents/MethICA/RUNNING_MethICA_EXAMPLE/LICAFR"
 >
 > # define output directory> 
 > output.directory <- "~/Results/"> 
@@ -86,25 +86,23 @@ We provide example input datasets with this package in the data directory, from 
 > bval <- bval[sel,];dim(bval)
 > CpG_feature <- CpG_feature[rownames(bval),]
 ```
-
+We select the 200 000 most variant CpG (based on sd) to keep only CpG with methylation variation in our data set.
 
 ## Preparing CpG feature input data
 
-MethICA works with CpG annotation. Ensure that you choce the appropriate reference annotation for your data. The CpG_feature.Rdata provided in the package correspond to the chromatin annotations for the hepatocellular carcinoma sample study. This table was generated with the function ??? which takes different inputs for each annotation : 
+MethICA works with CpG annotation. Ensure that you choce the appropriate reference annotation for your data. The CpG_feature.Rdata provided in the package correspond to the chromatin annotations for the hepatocellular carcinoma sample study for the hg19 reference genome. This table was generated with the function chromatin.feature which takes different inputs for each annotation : 
 <ul>
-<li>state : Chromatine domain (active/inactive) from <>
-<li>domain : Chromatine domain (ROADMAP domain) from <>
-<li>CpG_context : Methylation domain (HMD/PMD/LMR/UMR) from <>
-<li>cgi_feature : CpG density (Island, Shore, Shelf, out of cgi) from <>
-<li>gene_feature : Gene feature (Body, TSS500, out) from <>
-<li>gene_name : Gene name from <>
-<li>decile : decile of timing of replication (1: early --> 10: late) from <>
+<li>cgi_feature : CpG density (Island, Shore, Shelf, out of cgi) 
+<li>gene_name and gene_feature : from GENCODE hg19 reference genome <https://www.gencodegenes.org/human/release_34lift37.html>
+<li>state and domain : Chromatine state and domain from ROADMAP epigenomics project <https://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html#exp_18state>
+<li>CpG_context : Methylation domain (HMD/PMD/LMR/UMR) from  <https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113405&format=file&file=GSE113405%5FLIV%5FADLT%2EMethylSeekR%2Esegments%2Ebed%2Egz>
+<li>decile : decile of Replication timing signals of HepG2 (1: early --> 10: late) downloaded from the ENCODE project data portal and they are accessible under GEO accession numbers GSM923446 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923446> 
 </ul>
 
 ```{r CpG_feature, eval = FALSE, echo = TRUE}
 > # Annotate CpG table with various epigenomic features
 > #CpG_table = load.RData('~/Google Drive/MethICA/data/CPG_feature_Illumina.RData')
-> #CpG_feature = chromatin.feature(CpG_table = CpG_table, file_CpG_context = "MethICA/data/GSE113405_LIV_ADLT.MethylSeekR.segments.bed", name_col_CpG_context = "CpG_context", file_chrom_state = 'MethICA/data/cst18_liver.RData', name_col_chrom_state = c("state", "active"), file_CGI = "MethICA/data/CGI-based_features_hg19.txt", name_col_CGI ="cgi_feature", file_genes = "MethICA/data/Gene-based_features_hg19.txt", name_col_genes = c("gene_name", "gene_feature"), file_replication ="MethICA/data/HepG2_replication_domains.RData", name_col_replication = "decile", add_seq_info = TRUE, save = TRUE, output.directory = output.directory)
+> CpG_feature = chromatin.feature(CpG_table = CpG_table, file_CpG_context = "MethICA/data/GSE113405_LIV_ADLT.MethylSeekR.segments.bed", name_col_CpG_context = "CpG_context", file_chrom_state = 'MethICA/data/cst18_liver.RData', name_col_chrom_state = c("state", "active"), file_CGI = "MethICA/data/CGI-based_features_hg19.txt", name_col_CGI ="cgi_feature", file_genes = "MethICA/data/Gene-based_features_hg19.txt", name_col_genes = c("gene_name", "gene_feature"), file_replication ="MethICA/data/HepG2_replication_domains.RData", name_col_replication = "decile", add_seq_info = TRUE, save = TRUE, output.directory = output.directory)
 ```
 
 # Extract Methylation signature with ICA
@@ -113,27 +111,52 @@ Perform Independent signature analysis (ICA) with function mc_extract
 <ul>
 <li> input: bval matrix 
 <li> outputs: MC object with two matrices giving the contribution of CpGs and samples to each component and one vector giving components stability. If compute_stability = TRUE Perform n ICA, compute stability (recommended) and choose the most stable iteration, if compute_stability = FALSE, keep the first itteration and return NA in stability vector
+</ul>
 
 ```{r ICA, eval = FALSE, echo = TRUE}
 > MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iteration = 100, output.directory = output.directory, save = TRUE)
 ```
 
-Each signature is characterized by a contribution value of each CpG and an activity in the different samples. To facilitate the interpretation of the components, the groups of CpGs that are influential in each component and the samples in which the components are highly active are determined.
+<p>Each signature is characterized by a contribution value of each CpG and an activity in the different samples. To facilitate the interpretation of the components, the groups of CpGs that are influential in each component and the samples in which the components are highly active are determined and are returned by the function mc.activ.sample and mc.active.CpG as a list.</p>
+
+<p>To determine the most active CpGs, one can select a defined number of CpGs (method = "number", example = 2000 most contributing CpGs in the component) or set a contribution threshold and select CpGs with an activity above this threshold (recommended option, the default threshold corresponds to the contribution value where 5% of all CpGs in all components are higher). As the contribution of the CpGs can be negative or positive, the absolute value is used to select them.</p>
+
+<p>To determine the most active samples, (number selected by default = 10 percent of the total number) we have 2 options: We can select the samples based on their absolute value of contribution (as for CpG), or use a group of reference samples (in our case normal samples) and select the tumors that have the largest methylation differential with this reference.</p>
 
 ```{r contributing, eval = FALSE, echo = TRUE}
-> # Extract the most différentially methylated samples for each MC
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE))
-> 
-> # Represent methylation changes in most contributing tumors vs. normal samples
+> # Extract the most contributing CpG sites for each MC
+> MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
+>
+> # Extract the most differentially methylated samples for each MC
+> # Extract the most contributing samples for each MC based on absolute value of contribution 
+> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
+> # Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
+> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+```
+
+# Represent methylation changes
+
+<p>The first step in interpretation is to determine the major methylation changes extracted in the component. Is it predominantly hyper methylation, hypomethylation or a combination of both. This is done by representing the average methylation level of the most contributing CpGs in the active samples of the component compared to the reference. This is done by separating the samples into two groups, those with positive activity in the component and those with negative activity.</p>
+
+```{r MC_change, eval = FALSE, echo = TRUE}
+> #Represent methylation changes in most contributing tumors vs. normal samples
 > mc.change(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
 ```
 
+Example of generated figure: 
+![methylation change](./meth_change.png){width=100% height=100%}
+
 # Calculation and visualization of the characteristics of the contributing CpGs in the components
+
+A part of the interpretation of the components is based on the characteristics of the most contributing CpGs. The different chromatin annotations filled in the CpG_feature table are used to perform enrichment analyses and to see if the CpGs that drive the component present particular characteristics compared to the set of CpGs used for the analysis. These results are shown in a figure to facilitate interpretation.
 
 ```{r enrich_CpG, eval = FALSE, echo = TRUE}
 > # Association of MCw with (epi)genomic characteristics
 > enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.directory, CpG_feature = CpG_feature)
 ```
+
+Example of generated figure for MC7 component: 
+![methylation change](./CpG_feature.png){width=80% height=80%}
 
 # Association with sample annotations
 
@@ -142,6 +165,8 @@ Each signature is characterized by a contribution value of each CpG and an activ
 > Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
 ```
 
-# Extract Methylation signature with ICA
+Example of possible representation for association between annotations and components: 
+![methylation change](./CpG_feature.png){width=80% height=80%}
+
 
 
