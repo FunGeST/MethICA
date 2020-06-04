@@ -1,10 +1,10 @@
 # Rd
 # description >> Extract Methylation components
 # argument
-# item >> bval >> bval methylation data
-# item >> nb_comp >> number of component
-# item >> compute_stability >> if = TRUE, compute stability of compnent by performing n iteration and choose the most stable iteration
-# item >> nb_iteration >> nb iteration compute to determined the components stability
+# item >> bval >> methylation (beta-value) matrix
+# item >> nb_comp >> number of components to extract
+# item >> compute_stability >> if = TRUE, compute stability of components by performing n iterations and choose the most stable iteration
+# item >> nb_iteration >> number of iterations required to assess the stability of components
 # item >> alg.typ >> if alg.typ == "parallel" the components are extracted simultaneously (the default). if alg.typ == "deflation" the components are extracted one at a time
 # item >> method >> if method == "R" then computations are done exclusively in R (default). The code allows the interested R user to see exactly what the algorithm does. if method == "C" then C code is used to perform most of the computations, which makes the algorithm run faster. During compilation the C code is linked to an optimized BLAS library if present, otherwise stand-alone BLAS routines are compiled.
 # item >> maxit >> maximum number of iterations to perform
@@ -12,18 +12,18 @@
 # item >> tol >> a positive scalar giving the tolerance at which the un-mixing matrix is considered to have converged
 # item >> save >> if = TRUE, save output in the output.directory
 # item >> output.directory >> path to save output
-# value >> MC_object containing component extract :
-# - CpG_contrib >> contribution of CpG in each component
-# - Sample_contrib >> contribution of Sample in each component
-# - stability >> sability of each component 
+# value >> MC_object containing the following elements :
+# - CpG_contrib >> contribution of CpGs to each component
+# - Sample_contrib >> contribution of samples to each component
+# - stability >> stability of each component 
 # author >> Lea Meunier
-# keyword >> Independant component analysis 
+# keyword >> Independent component analysis 
 #` @import fastICA
 # end
 
 mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteration = 100, alg.typ = "parallel", method = "C", maxit = 1000, fun = c("logcosh","exp"), tol = 10^-6, save = FALSE, output.directory){
 	
-	# The fast ICA algorithm uses a random initialization, which generates different results each time it is used. The set.seed() function is used to get the same result each time the algorithm is used 
+	# The fastICA algorithm uses a random initialization, which generates different results each time it is used. The set.seed() function is used to get the same result each time the algorithm is used 
 	fixed_init = 154
 	set.seed(fixed_init)
 	it_1 <- fastICA::fastICA(bval, n.comp= nb_comp, alg.typ = "parallel", method = method, maxit = maxit, fun = fun, tol = tol)
@@ -40,12 +40,12 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 				dir.create(output.directory)
 			}
 			if(compute_stability == TRUE ){	
-				compute_stability_it = paste0(output.directory, "iteration/")
+				compute_stability_it = file.path(output.directory, "iterations/")
 				if(!file.exists(compute_stability_it)){
 					dir.create(compute_stability_it)
 				}
-				write.table(it_1$S, file = paste0(compute_stability_it, "it_1_S.txt"), sep = "\t")
-				write.table(it_1$A, file = paste0(compute_stability_it, "it_1_A.txt"), sep = "\t")
+				write.table(it_1$S, file = file.path(compute_stability_it, "it_1_S.txt"), sep = "\t")
+				write.table(it_1$A, file = file.path(compute_stability_it, "it_1_A.txt"), sep = "\t")
 			}
 		}
 	}
@@ -70,8 +70,8 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 			# save results of iteration
 			assign(paste0("it_",i), it_tmp)
 			if(save == TRUE){
-				write.table(get(paste0("it_",i, ""))$S, file = paste0(compute_stability_it, "it_",i, "_S.txt"), sep = "\t")
-				write.table(get(paste0("it_",i, ""))$A, file = paste0(compute_stability_it, "it_",i, "_A.txt"), sep = "\t")
+				write.table(get(paste0("it_",i, ""))$S, file = file.path(compute_stability_it, paste0("it_",i, "_S.txt")), sep = "\t")
+				write.table(get(paste0("it_",i, ""))$A, file = file.path(compute_stability_it, paste0("it_",i, "_A.txt")), sep = "\t")
 			}
 
 			# compute correlation between iterations
@@ -108,7 +108,7 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 		cor_matrix = cbind(iteration = rownames(cor_matrix), cor_matrix)
 		
 		if(save == TRUE){
-			write.table(cor_matrix, file = paste0(output.directory, "cor_it_matrix.txt"), sep = '\t', col.names = TRUE, row.names = TRUE)
+			write.table(cor_matrix, file = file.path(output.directory, "cor_it_matrix.txt"), sep = '\t', col.names = TRUE, row.names = TRUE)
 		}
 		
 	}else{
@@ -123,22 +123,25 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 
 	if(save == TRUE){
 		CpG_contrib_save = cbind(CpG = rownames(CpG_contrib), CpG_contrib)
-		write.table(CpG_contrib_save, file = paste0(output.directory, "CpG_contrib.txt"))	
+		write.table(CpG_contrib_save, file = file.path(output.directory, "CpG_contrib.txt"))	
 		Sample_contrib_save = cbind(Sample = rownames(Sample_contrib), Sample_contrib)	
-		write.table(Sample_contrib, file = paste0(output.directory, "Sample_contrib.txt"))		
+		write.table(Sample_contrib, file = file.path(output.directory, "Sample_contrib.txt"))		
 	}
 
 	return(list("CpG_contrib" = CpG_contrib, "Sample_contrib" = Sample_contrib, "stability" = stability))
 }
 
+
+
+
 # Rd
 # description >> Determine the most contributing CpGs for each component
 # argument
-# item >> MC_object >> Object return by mc.extract
-# item >> method >> choose between "threshold" selection of CpG above a threshold or number selection of most contributing CpG
-# item >> threshold >> threshold value, default select value where 5 percent of all CpG in all components are higher
-# item >> number >> number or most contributingg CpG
-# value >> return list with active CpG for each component
+# item >> MC_object >> methylation components object returned by mc.extract
+# item >> method >> choose "threshold" to select CpGs with a contribution greater than the "threshold" parameter, or "number" to select a defined number of most contributing CpGs
+# item >> threshold >> threshold on contribution values used to select CpGs with the "threshold" method. Set by default to the 95th percentile of CpG contribution values.
+# item >> number >> number or most contributing CpGs to select with the "number" method
+# value >> List of the most contributing CpG sites for each component
 # author >> Lea Meunier
 # keyword >> methods
 # details >> ...
@@ -169,20 +172,20 @@ mc.active.CpG <- function(MC_object, method = c("threshold", "number"), threshol
 
 
 # Rd
-# description >> Determine the most active sample in each component
+# description >> Determine the most contributing samples for each component
 # argument
-# item >> MC_object >> Object return by mc.extract
-# item >> method >> choose between "absolute" selection of most contributing Samples in the component (in absolute value) and "reference", the samples with bval of active CpG farthest for bval in ref samples
-# item >> bval >> bval methylation data
-# item >> MC_contrib_CpG >> most contributing CpG of each comp compute with mc.active.CpG function
-# item >> number >> nomber of samples selected (default : 10 percent)
-# item >> ref >> liste of samples use like reference
-# value >> return liste of active sample in each component
+# item >> MC_object >> methylation components object returned by mc.extract
+# item >> method >> choose "absolute" to select samples with the greatest contribution to the component (in absolute value), or "reference" to select samples with the strongest methylation difference with respect to reference samples over the most contributing CpG sites
+# item >> bval >> methylation (beta-value) matrix
+# item >> MC_contrib_CpG >> most contributing CpG sites for each component returned by the mc.active.CpG function
+# item >> number >> number of samples selected (default: top 10 percent)
+# item >> ref >> list of samples to be used as reference
+# value >> List of the most contributing samples for each component
 # author >> Lea Meunier
 # keyword >> methods
 # end
 
-mc.activ.sample <- function(MC_object, method = c("absolute", "reference"),bval = NULL , MC_contrib_CpG = NULL, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = NULL){
+mc.active.sample <- function(MC_object, method = c("absolute", "reference"),bval = NULL , MC_contrib_CpG = NULL, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = NULL){
 	
 	active_sample = NULL
 	if(method == "absolute"){
@@ -213,14 +216,16 @@ mc.activ.sample <- function(MC_object, method = c("absolute", "reference"),bval 
 }
 
 
+
+
 # Rd
-# description >> required
+# description >> Generate graphs showing methylation changes between reference samples and the most contributing samples to each component
 # argument
-# item >> MC_object >> Object return by mc.extract
-# item >> MC_active_sample >> object return by mc.activ.sample with active sample in each component
-# item >> MC_contrib_CpG >> object return by mc.active.CpG with most contributing CpGs for each component
-# item >> bval >> bval methylation data
-# item >> ref >> liste of samples use like reference
+# item >> MC_object >> methylation components object returned by mc.extract
+# item >> MC_active_sample >> most contributing samples for each component returned by the mc.active.CpG function
+# item >> MC_contrib_CpG >> most contributing CpG sites for each component returned by the mc.active.sample function
+# item >> bval >> methylation (beta-value) matrix
+# item >> ref >> list of samples to be used as reference
 # item >> output.directory >> path to save output
 # author >> Lea Meunier
 # keyword >> visualisation
@@ -237,7 +242,7 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 	df <- data.frame(x1 = 0, x2 = 0, y1 = 0, y2 = 1, x3 = 1, y3 = 1, x4 = 1, y4 =0)	
 	for(comp in colnames(MC_object$CpG_contrib)){	
 					
-		output.directory_tmp = paste0(output.directory, comp, "/")
+		output.directory_tmp = file.path(output.directory, comp)
 		if(!file.exists(output.directory_tmp)){
 			dir.create(output.directory_tmp)
 		}
@@ -253,8 +258,8 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			bval_T_pos = apply(bval[MC_contrib_CpG[[comp]], samples_active_plus], 1, mean)
 			df_pos = data.frame(bval_T = bval_T_pos, bval_N = apply(bval[MC_contrib_CpG[[comp]], ref], 1, mean))
 			
-			p1 = ggplot2::ggplot(data= df_pos) + ggplot2::ggtitle(paste0("Positive contribing Sample ", comp )) + 
-			ggplot2::xlab("bval in reference samples") + ggplot2::ylab("bval in tumors samples") +
+			p1 = ggplot2::ggplot(data= df_pos) + ggplot2::ggtitle(comp) + 
+			ggplot2::xlab("Methylation in reference samples") + ggplot2::ylab("Methylation in most contributing samples") +
 			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
           panel.grid.major = ggplot2::element_blank(),
           panel.grid.minor = ggplot2::element_blank(),
@@ -274,8 +279,8 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			bval_T_neg = apply(bval[MC_contrib_CpG[[comp]], samples_active_moins], 1, mean)
 			df_neg = data.frame(bval_T = bval_T_neg, bval_N = apply(bval[MC_contrib_CpG[[comp]], ref], 1, mean))
 			
-			p2 = ggplot2::ggplot(data= df_neg) + ggplot2::ggtitle(paste0("Negative contribing Sample ", comp )) + 
-			ggplot2::xlab("bval in reference samples") + ggplot2::ylab("bval in tumors samples") +
+			p2 = ggplot2::ggplot(data= df_neg) + ggplot2::ggtitle(comp) + 
+			ggplot2::xlab("Methylation in reference samples") + ggplot2::ylab("Methylation in most contributing samples") +
 			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
           panel.grid.major = ggplot2::element_blank(),
           panel.grid.minor = ggplot2::element_blank(),
@@ -293,15 +298,18 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 		# concatenation of mean methylation level and corresponding ref sample methylation level
 		
 		if(length(samples_active_moins)>5 & length(samples_active_plus)>5){
-			pdf(paste(output.directory_tmp, "meth_change_", comp, ".pdf", sep=""), width = 10, height = 5)			
-				print(cowplot::plot_grid(p2, p1, ncol = 2, nrow = 1))
-			dev.off()
+		  pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, "_positive_samples.pdf")), width = 5, height = 5)			
+		   print(p1)
+		  dev.off()
+		  pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, "_negative_samples.pdf")), width = 5, height = 5)			
+		   print(p2)
+		  dev.off()
 		}else if(length(samples_active_plus)>5){
-			pdf(paste(output.directory_tmp, "meth_change_", comp, ".pdf", sep=""), width = 5, height = 5)			
+			pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, ".pdf")), width = 5, height = 5)			
 				print(p1)
 			dev.off()
 		}else if(length(samples_active_moins)>5){
-			pdf(paste(output.directory_tmp, "meth_change_", comp, ".pdf", sep=""), width = 5, height = 5)			
+			pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, ".pdf")), width = 5, height = 5)			
 				print(p2)
 			dev.off()
 		}
@@ -312,17 +320,17 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 
 
 
+
 # Rd
-# description >> comptute enrichement of CpG feature and generate repressentation
+# description >> Compute and represent enrichement of the most contributing CpG features to each component within specific (epi)genomic features
 # argument
-# item >> MC_object >> Object return by mc.extract
-# item >> MC_contrib_CpG >> object return by mc.active.CpG with most contributing CpGs for each component
+# item >> MC_object >> methylation components object returned by mc.extract
+# item >> MC_contrib_CpG >> most contributing CpG sites for each component returned by the mc.active.sample function
 # item >> output.directory >> path to save output
 # author >> Lea Meunier
 # keyword >> visualisation
 #` @import plotrix
 # end
-
 
 enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_feature){
 	
@@ -345,30 +353,30 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 
 	for(comp in colnames(MC_object$CpG_contrib)){
 		
-		output.directory_tmp = paste0(output.directory, comp, "/")
+		output.directory_tmp = file.path(output.directory, comp)
 		if(!file.exists(output.directory_tmp)){
 			dir.create(output.directory_tmp)
 		}
 		
 		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "gene_feature", CpG_feature = CpG_feature)
-		pdf(paste(output.directory_tmp, "Gene_feature_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("Gene_feature_", comp, ".pdf")), width = 6, height = 6)
 		barplot(tmp_enrich[order_gene_feature], col = color_gene_feature)
 		dev.off()
 		
 		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "cgi_feature", CpG_feature = CpG_feature)
-		pdf(paste(output.directory_tmp, "CGI_feature_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("CGI_feature_", comp, ".pdf")), width = 6, height = 6)
 		barplot(tmp_enrich[order_feature], col = color_feature)
 		dev.off()
 		
 		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "domain", CpG_feature = CpG_feature)
-		pdf(paste(output.directory_tmp, "Chromatin_state_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("Chromatin_state_", comp, ".pdf")), width = 6, height = 6)
 		barplot(tmp_enrich[order_active], col = color_active)
 		dev.off()
 		
 		tmp_enrich = as.numeric(enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "state", CpG_feature = CpG_feature)[ch.states])
 		names(tmp_enrich) = ch.states
 		tmp_enrich[is.na(tmp_enrich)]=0
-		pdf(paste(output.directory_tmp, "Chromatin_domain_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("Chromatin_domain_", comp, ".pdf")), width = 6, height = 6)
 		par(bg=NA)
 		
 		testpos<-seq(0,350,length.out = 18)
@@ -392,33 +400,36 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 		dev.off()
 
 		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "decile", CpG_feature = CpG_feature)
-		pdf(paste(output.directory_tmp, "Rep_timing_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("Rep_timing_", comp, ".pdf")), width = 6, height = 6)
 		barplot(tmp_enrich[1:10], col = color_decile)
 		dev.off()
 		
 		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "CpG_context", CpG_feature = CpG_feature)
-		pdf(paste(output.directory_tmp, "Domain_type_", comp, ".pdf", sep=""), width = 6, height = 6)
+		pdf(file.path(output.directory_tmp, paste0("Domain_type_", comp, ".pdf")), width = 6, height = 6)
 		barplot(tmp_enrich[order_domain_type], col = color_domain_type)	
 		dev.off()
 	}
 }
 
 
+
+
 # Rd
-# description >> compute uni and multivariate analysis of component and annotations
+# description >> Compute associations between methylation components and sample annotations by uni and multivariate analysis
 # argument
-# item >> MC_object >> Object return by mc.extract
-# item >> annot >> annotation table
-# item >> selcol >> selection of annotation for univariate analysis
-# item >> save >> if TRUE, save results file in the output.directory
+# item >> MC_object >> methylation components object returned by mc.extract
+# item >> annot >> sample annotation table
+# item >> selcol >> selection of annotations to be included in univariate analysis (by default all columns will be used)
+# item >> save >> if TRUE, save results to the output.directory
 # item >> output.directory >> path to save output
-# item >> selcol_Multi >> selection of annotation for multivariate analysis
-# value >> return 2 matrix : pvalue of univariate analysis and pvalue of multivariate analysis
+# item >> selcol_Multi >> selection of annotations to be included in multivariate analysis
+# item >> multi_theshold >> p-value threshold to include an annotation in the multivariate analysis
+# value >> returns two matrices : p-values of univariate analysis and p-values of multivariate analysis
 # author >> Lea Meunier
 # keyword >> association
 # end
 
-mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, selcol_Multi = selcol, seuil_multi = 0.001){
+mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, selcol_Multi = selcol, multi_theshold = 0.001){
 	annot = factoall(annot)
 	annotS = annot[, selcol]
 	contrib = MC_object$Sample_contrib
@@ -435,15 +446,15 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 	}
     if(save == TRUE){
     	pval_uni = pval
-    	save(pval_uni, file = paste0(output.directory,"IC_vs_clinical_annot.Rdata"))
+    	save(pval_uni, file = file.path(output.directory,"IC_vs_clinical_annot.Rdata"))
     	pval_uni = data.frame(annot = rownames(pval_uni), pval_uni)
-		write.table(pval_uni,file.path(output.directory,"IC_vs_clinical_annot.txt"),sep="\t",quote=F,row.names=F)
+		write.table(pval_uni,file.path(output.directory,"IC_vs_clinical_annot_univariate.txt"),sep="\t",quote=F,row.names=F)
     }
     
         
 	for(sig in colnames(pval)){
 
-		sign.fac <- intersect(colnames(annotS)[which(pval[,sig] < seuil_multi)], selcol_Multi)
+		sign.fac <- intersect(colnames(annotS)[which(pval[,sig] < multi_theshold)], selcol_Multi)
 
 		if(length(sign.fac)>0){
 			formula <- paste0("contrib[,sig] ~ annotS$", sign.fac[1])
@@ -456,7 +467,7 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 		}
 	}
 	multiv <- multiv[which(multiv$p.value < 0.1),]
-	write.table(multiv,file.path(output.directory,"IC_vs_clinical_annot_multi.txt"),sep="\t",quote=F,row.names=F)
+	write.table(multiv,file.path(output.directory,"IC_vs_clinical_annot_multivariate.txt"),sep="\t",quote=F,row.names=F)
 
 	
 	pval_multi = matrix(NA, nrow = ncol(annotS), ncol = ncol(contrib))
@@ -478,9 +489,9 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 			}		
 		}
 	}
-	save(pval_multi,file = paste0(output.directory,"IC_vs_clinical_annot_multi.Rdata"))
+	save(pval_multi,file = file.path(output.directory,"IC_vs_clinical_annot_multi.Rdata"))
 	annot_multi = data.frame(annot = rownames(pval_multi), pval_multi)
-	write.table(annot_multi, paste0(output.directory,"IC_vs_clinical_annot_multi.txt"),sep="\t",quote=F,row.names=F)
+	write.table(annot_multi, file.path(output.directory,"IC_vs_clinical_annot_multi.txt"),sep="\t",quote=F,row.names=F)
 
 	return(list("pval_uni" = pval_uni, "pval_multi" = pval_multi))
 }

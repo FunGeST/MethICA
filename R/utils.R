@@ -1,8 +1,8 @@
 # Rd
-# description >> loads a Rdata file into an object
+# description >> Load a Rdata file into an object
 # argument
 # item >> file.name >> path of the file to load
-# value >> object contain in the Rdata 
+# value >> object contained in the Rdata 
 # author >> Lea Meunier
 # keyword >> Rdata
 # end
@@ -13,10 +13,10 @@ load.RData = function(file.name) {
 }
 
 # Rd
-# description >> Remove factor of a table, data.frame or matrix
+# description >> Remove factors in a table, data.frame or matrix
 # argument
-# item >> d >> table where you want to remove the factors
-# value >> table without factor
+# item >> d >> table frpm which you want to remove factors
+# value >> Same table without factors
 # author >> Lea Meunier
 # keyword >> table
 # end
@@ -41,17 +41,17 @@ factoall <- function (d)
 
 
 # Rd
-# description >> Function to annotate positions in a data frame (dfPos) using segments in another data frame (dfSegm)
+# description >> Annotate positions in a data frame (dfPos) using segments in another data frame (dfSegm)
 # argument
-# item >> table_Pos >> Data frame with positions to annotate
-# item >> table_Pos.chrom.col >> Chromosome column in table_Pos
-# item >> table_Pos.pos.col >> Position column in table_Pos
-# item >> table_Segm >> required
-# item >> table_Segm.chrom.col >> Data frame with segments to use for annotating
-# item >> table_Segm.start.col >> Chromosome column in table_Segm
-# item >> table_Segm.end.col >> Position column in table_Segm
-# item >> cols_to_add >> Names of columns in table_Segm that should be used to annotate table_Pos
-# item >> names_cols_to_add >> Column names to give in the columns added to table_Pos
+# item >> table_Pos >> data frame with positions to annotate
+# item >> table_Pos.chrom.col >> chromosome column in table_Pos
+# item >> table_Pos.pos.col >> position column in table_Pos
+# item >> table_Segm >> data frame with segments to use for annotating dfPos
+# item >> table_Segm.chrom.col >> chromosome column in table_Segm
+# item >> table_Segm.start.col >> chromosome column in table_Segm
+# item >> table_Segm.end.col >> end position column in table_Segm
+# item >> cols_to_add >> names of columns in table_Segm that should be used to annotate table_Pos
+# item >> names_cols_to_add >> column names to give to the columns added to table_Pos
 # value >> table_Pos annotated with table_Segm information
 # author >> Lea Meunier
 # keyword >> annotation
@@ -88,12 +88,12 @@ table.PosXSegm <- function (table_Pos = NULL, table_Pos.chrom.col = "chrom", tab
 
 
 # Rd
-# description >> compute the enrichment of CpG feature 
+# description >> Compute the enrichment of CpG sites within categories of (epi)genomic features
 # argument
-# item >> CpG_select >> CpG selection 
-# item >> column >> feature to compute enrichment
-# item >> gene_table >> table with CpG feature
-# value >> table with enrichment results
+# item >> CpG_select >> selected CpGs (e.g. most contributing CpGs to a component)
+# item >> column >> column in CpG_feature table for which enrichment scores should be computed
+# item >> CpG_feature >> annotate CpG tables
+# value >> Returns enrichment scores of selected CpGs within each category of the "column" table
 # author >> Lea Meunier
 # keyword >> test
 #` @import stringr

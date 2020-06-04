@@ -1,9 +1,9 @@
 MethICA
 ========
 
-Methylation signature analysis with ICA project R package
+Methylation signature analysis with independent component analysis.
 
-Description: use independent components analysis (ICA) on methylation data to extract epigenetics signature and provide statistical analysis and representation to help interpretation
+Description: apply independent component analysis (ICA) to methylation data to extract epigenetic signatures and perform downstream analyses and representations to interpret the biological meaning of methylation components.
 
 ## Installation
 ========
@@ -15,30 +15,30 @@ devtools::install_github("FunGeST/MethICA")
 
 ## Input files
 ========
-For the extraction of methylation signature _MethICA_ requires one mandatory input file -- a **methylation level** file (bval) describing methylation level of CpG (row) in the samples series (column). For the representation to help the interpretation of methylation signature, a further two files are required -- a **CpG annotation** file with interest CpG information, and a minimal **sample annotation** file.
+For the extraction of methylation signature _MethICA_ requires one mandatory input file -- a **methylation level** file (bval) describing methylation levels of individual CpG sites or genomic regions (row) in each sample (column). Two additional files are needed for the interpretation of methylation components: a **CpG annotation** file describing the epigenetic context of CpG sites, and a **sample annotation** providing any relevant information about the samples.
 
 **The input files should have the following format. Example input files are provided with the package.**
 
 `1]. bval `: __methylation level data__
 
-* `Rownames` : CpG id
-* `Colnames` : Samples id
+* `Rownames` : CpG IDs
+* `Colnames` : Sample IDs
 
 **Optional: (the header is required, but the order of the columns can change)**
 
 `2]. CpG annotation`:
 
 
-* `TargetID` : CpG id. Any alphanumeric string.
-* `state` : Chromatine domain (active/inactive)
-* `domain` : Chromatine domain (ROADMAP domain)
+* `TargetID` : CpG ID. Any alphanumeric string.
+* `state` : Chromatin state (active/inactive)
+* `domain` : Chromatin domain (ROADMAP nomenclature)
 * `CpG_context` : Methylation domain (HMD/PMD/LMR/UMR)
-* `cgi_feature` : CpG density (Island, Shore, Shelf, out of cgi)
-* `gene_feature` : Gene feature (Body, TSS500, out)
+* `cgi_feature` : CpG-island based feature (Island, Shore, Shelf, out of cgi)
+* `gene_feature` : Gene-based feature (Body, TSS500, out)
 * `gene_name` : Gene name
-* `decile` : decile of timing of replication (1: early --> 10: late)
+* `decile` : Replication timing decile (1: early --> 10: late)
 * `CHROM` : Chromosome. Between chr1 and chr22 or the chrX or chrY ('chr' prefix required).
-* `Rownames` : MAPINFO : CpG position (CHROM and MAPINFO necessary only to add chromatin annotation to the table with chromatin.feature function)
+* `MAPINFO` : CpG position (CHROM and MAPINFO are only required to annotate the CpG table with epigenomic features using chromatin.feature function)
 
 
 `3]. annot_data`: __sample annotation data__
@@ -48,7 +48,7 @@ For the extraction of methylation signature _MethICA_ requires one mandatory inp
 ## Running MethICA
 ================
 
-* The [RUNNING\_METHICA\_EXAMPLE](https://github.com/FunGeST/MethICA) folder contains an example dataset and an R script of a typical MethICA analysis using this data. Please try!</br>
+* The [RUNNING\_METHICA\_EXAMPLE](https://github.com/FunGeST/MethICA) folder contains an example dataset and an R script of a typical MethICA analysis. Please try!</br>
 * [*Introduction to MethICA*] provides a comprehensive example of the MethICA workflow with detailed  explanations of each function.</br> 
 
 
