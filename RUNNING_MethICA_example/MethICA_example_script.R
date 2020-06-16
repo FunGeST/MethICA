@@ -9,8 +9,9 @@ test.directory <- "~/Tools/MethICA/RUNNING_MethICA_example/LICAFR"
 
 bval = load.RData('~/Google Drive/MethICA/RUNNING_MethICA_exemple/LICAFR/bval.Rdata')
 
-annot = load.RData(file.path(test.directory,'LICAFR_annot.RData'))
-annot = factoall(annot)
+annot = read.table(file = "~/Documents/GitHub/MethICA/RUNNING_MethICA_example/LICAFR/LICAFR_annot.txt", header = T, stringsAsFactors=F)
+rownames(annot) = annot$SampleID
+
 
 CpG_feature = load.RData('~/Google Drive/MethICA/RUNNING_MethICA_exemple/LICAFR/CpG_feature.Rdata')
 # The chromatin_feature function may be used to annotate a CpG table with chromatin features.

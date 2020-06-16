@@ -422,14 +422,13 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 # item >> selcol >> selection of annotations to be included in univariate analysis (by default all columns will be used)
 # item >> save >> if TRUE, save results to the output.directory
 # item >> output.directory >> path to save output
-# item >> selcol_Multi >> selection of annotations to be included in multivariate analysis
 # item >> multi_theshold >> p-value threshold to include an annotation in the multivariate analysis
 # value >> returns two matrices : p-values of univariate analysis and p-values of multivariate analysis
 # author >> Lea Meunier
 # keyword >> association
 # end
 
-mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, selcol_Multi = selcol, multi_theshold = 0.001){
+mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, multi_theshold = 0.001){
 	annot = factoall(annot)
 	annotS = annot[, selcol]
 	contrib = MC_object$Sample_contrib
@@ -454,7 +453,7 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
         
 	for(sig in colnames(pval)){
 
-		sign.fac <- intersect(colnames(annotS)[which(pval[,sig] < multi_theshold)], selcol_Multi)
+		sign.fac <- colnames(annotS)[which(pval[,sig] < multi_theshold)]
 
 		if(length(sign.fac)>0){
 			formula <- paste0("contrib[,sig] ~ annotS$", sign.fac[1])
@@ -481,10 +480,10 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 		Mult_analysis = Mult_analysis[which(Mult_analysis$term != "(Intercept)"),]
 	
 		for(j in 1:nrow(Mult_analysis)){
-			for(k in 1:length(selcol_Multi)){
-				tmp_var = grep(selcol_Multi[k],Mult_analysis[j,"term"])
+			for(k in 1:length(selcol)){
+				tmp_var = grep(selcol[k],Mult_analysis[j,"term"])
 				if(length(tmp_var)>0){
-					pval_multi[selcol_Multi[k], comp] = Mult_analysis[j,"p.value"]
+					pval_multi[selcol[k], comp] = Mult_analysis[j,"p.value"]
 				}
 			}		
 		}
