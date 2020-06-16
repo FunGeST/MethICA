@@ -44,6 +44,7 @@ For the extraction of methylation signature _MethICA_ requires one mandatory inp
 `3]. annot_data`: __sample annotation data__
 
 * `Sample`: Sample identifier. Any alphanumeric string.
+* add in column the annotations you are interested in testing
 
 ## Running MethICA
 ================
