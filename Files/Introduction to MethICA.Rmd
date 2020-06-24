@@ -161,6 +161,62 @@ To better understand the components, we then explore the characteristics of thei
 Example of outputs for MC7 component: 
 ![methylation change](./CpG_feature.png){width=80% height=80%}
 
+<p> In the Zhou et al. paper (Zhou, W., Dinh, H.Q., Ramjan, Z., Weisenberger, D.J., Nicolet, C.M., Shen, H., Laird, P.W., and Berman, B.P. (2018). DNA methylation loss in late-replicating domains is linked to mitotic cell division. Nature Genetics 50, 591–602.) CpG are split in 48 categories depending of the methylation domain, number of flanking CpG and adjacent nucleotide, and the team observe different methylation modification during time. In MethICA with add this CpG information, performe an enrichment analysis and representation to have in on figure, all the enrichment results.</p>
+
+```{r enrich_CpG_Zhou, eval = FALSE, echo = TRUE}
+# create table with catagorie
+CpG_feature$nb_flanking_CpG_reccod = CpG_feature$nb_flanking_CpG
+CpG_feature$nb_flanking_CpG_reccod[which(CpG_feature $nb_flanking_CpG_reccod>3)] = 3
+
+enrich_context = matrix(NA, nrow = nrow(CpG_feature), ncol = 4*4*3)
+rownames(enrich_context) = rownames(CpG_feature)
+colnames(enrich_context) = paste(rep(c("HMD", "PMD", "LMR", "UMR"), each = 12), rep(rep(3:0, each = 3), length = 48), rep(c("SCGS", "SCGW", "WCGW"), length = 48), sep = "_")
+
+i=1
+for(domain_type in c("HMD", "PMD", "LMR", "UMR")){
+	for(nb_flanking_CpG in c(3, 2, 1, 0)){
+		for(context in c("SCGS", "SCGW", "WCGW")){
+			enrich_context[which(CpG_feature$CpG_context == domain_type & CpG_feature$nb_flanking_CpG_reccod == nb_flanking_CpG & CpG_feature$context == context),i] = "yes"
+			i=i+1
+		}
+	}
+}
+enrich_context = rbind(enrich_context, rep("yes", ncol(enrich_context)))
+table_enrich_context = apply(enrich_context, 2, table)[colnames(enrich_context)]-1
+
+# compute enrichment in each component
+nbComp = length(MC_active_sample)
+
+matrice_enrich = matrix(NA, ncol = nbComp, nrow = 48)
+rownames(matrice_enrich) = names(table_enrich_context)
+colnames(matrice_enrich) = paste0("MC", 1: nbComp)
+
+for(i in 1:nbComp){
+	context = enrich_context[MC_contrib_CpG[[i]],]
+	context = rbind(context, rep("yes", ncol(context)))
+		
+	table_context = apply(context, 2, table)[colnames(enrich_context)]-1
+	matrice_enrich[,i] = (table_context / sum(table_context)) / (table_enrich_context / sum(table_enrich_context))
+
+}
+
+# scale for representation
+matrice_enrich = matrice_enrich-1 
+matrice_enrich[which(matrice_enrich>5)] = 5
+matrice_enrich[which(matrice_enrich <0)] = 0
+
+cst_color <- colorRampPalette(c("white","white", "grey40"))(100 + 1)
+
+pdf(file.path(output.directory, "CpG_context_Zhou.pdf"),width=8,height=8, bg = "transparent")
+par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+corrplot(matrice_enrich, col = cst_color, is.corr = FALSE, tl.col = "black", tl.cex = 1.1, mar=c(0,0,0,0), bg = "transparent",cl.lim = c(0,6))
+dev.off()
+```
+
+<p> Example of outputs for 48 CpG context in the 20 components: </p>
+![methylation change](./CpG_context_Zhou.png){width=40% height=40%}
+
+
 # Association with sample annotations
 
 <p>The final step is to analyze the characteristics of samples most strongly contributing to each component. The mc.annot function first performs univariate linear regressions to identify annotations associated with each MC. Significant annotations are then included in multivariate analyses to determine the strongest determinants of each MC.</p>

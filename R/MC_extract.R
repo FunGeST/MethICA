@@ -258,19 +258,35 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			bval_T_pos = apply(bval[MC_contrib_CpG[[comp]], samples_active_plus], 1, mean)
 			df_pos = data.frame(bval_T = bval_T_pos, bval_N = apply(bval[MC_contrib_CpG[[comp]], ref], 1, mean))
 			
+			df_pos_Hyper = rbind(df_pos[which(df_pos$bval_T > (df_pos$bval_N+0.05)),])
+			df_pos_Hypo = rbind(df_pos[which(df_pos$bval_T < (df_pos$bval_N-0.05)),])
+			
+			tmp_NA = matrix(NA, ncol = 2, nrow = max(nrow(df_pos_Hyper), nrow(df_pos_Hypo)) - min(nrow(df_pos_Hyper), nrow(df_pos_Hypo)))
+			colnames(tmp_NA) = c("bval_T", "bval_N")
+			if(nrow(df_pos_Hyper)>nrow(df_pos_Hypo)){
+				df_pos_Hypo = rbind(df_pos_Hypo, tmp_NA)
+			}else if(nrow(df_pos_Hyper)<nrow(df_pos_Hypo)){
+				df_pos_Hyper = rbind(df_pos_Hyper, tmp_NA)
+			}
+			df_pos = cbind(df_pos_Hyper, df_pos_Hypo)
+			colnames(df_pos) = c("bval_T_hyper", "bval_N_hyper", "bval_T_hypo", "bval_N_hypo")
+			
+						
 			p1 = ggplot2::ggplot(data= df_pos) + ggplot2::ggtitle(comp) + 
 			ggplot2::xlab("Methylation in reference samples") + ggplot2::ylab("Methylation in most contributing samples") +
 			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
           panel.grid.major = ggplot2::element_blank(),
           panel.grid.minor = ggplot2::element_blank(),
-          axis.line = ggplot2::element_blank()) + 
-    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkred") +
+          axis.line = ggplot2::element_blank(),
+          plot.title = ggplot2::element_text(hjust = 0.5)) + 
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N_hypo, y= bval_T_hypo, alpha=..count..), fill="darkblue") +
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N_hyper, y= bval_T_hyper, alpha=..count..), fill="darkred") +
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x2, yend=y2))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x4, yend=y4))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x3, yend=y3))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x2, y=y2, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))
-			
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))+ ggplot2::scale_x_continuous(expand = c(0, 0)) + ggplot2::scale_y_continuous(expand = c(0, 0))
+
 		}else{
 			bval_T_pos = NA
 		}
@@ -279,18 +295,36 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 			bval_T_neg = apply(bval[MC_contrib_CpG[[comp]], samples_active_moins], 1, mean)
 			df_neg = data.frame(bval_T = bval_T_neg, bval_N = apply(bval[MC_contrib_CpG[[comp]], ref], 1, mean))
 			
+			df_neg_Hyper = rbind(df_neg[which(df_neg$bval_T > (df_neg$bval_N+0.05)),])
+			df_neg_Hypo = rbind(df_neg[which(df_neg$bval_T < (df_neg$bval_N-0.05)),])
+			
+			tmp_NA = matrix(NA, ncol = 2, nrow = max(nrow(df_neg_Hyper), nrow(df_neg_Hypo)) - min(nrow(df_neg_Hyper), nrow(df_neg_Hypo)))
+			colnames(tmp_NA) = c("bval_T", "bval_N")
+			if(nrow(df_neg_Hyper)>nrow(df_neg_Hypo)){
+				df_neg_Hypo = rbind(df_neg_Hypo, tmp_NA)
+			}else if(nrow(df_neg_Hyper)<nrow(df_neg_Hypo)){
+				df_neg_Hyper = rbind(df_neg_Hyper, tmp_NA)
+			}
+			df_neg = cbind(df_neg_Hyper, df_neg_Hypo)
+			colnames(df_neg) = c("bval_T_hyper", "bval_N_hyper", "bval_T_hypo", "bval_N_hypo")
+
+
 			p2 = ggplot2::ggplot(data= df_neg) + ggplot2::ggtitle(comp) + 
 			ggplot2::xlab("Methylation in reference samples") + ggplot2::ylab("Methylation in most contributing samples") +
-			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none') + ggplot2::theme(panel.border = ggplot2::element_blank(),
+			ggplot2::theme_classic(base_size = 15) + ggplot2::theme(legend.position='none')  + ggplot2::theme(panel.border = ggplot2::element_blank(),
           panel.grid.major = ggplot2::element_blank(),
           panel.grid.minor = ggplot2::element_blank(),
-          axis.line = ggplot2::element_blank()) + 
-    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N, y= bval_T, alpha=..count..), fill="darkblue") +
+          axis.line = ggplot2::element_blank(),
+          plot.title = ggplot2::element_text(hjust = 0.5)) + 
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N_hypo, y= bval_T_hypo, alpha=..count..), fill="darkblue") +
+    		ggplot2::stat_binhex(bins = 25, ggplot2::aes(x= bval_N_hyper, y= bval_T_hyper, alpha=..count..), fill="darkred") +
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x2, yend=y2))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x4, yend=y4))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x1, y=y1, xend=x3, yend=y3))+
      		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x2, y=y2, xend=x3, yend=y3))+
-     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))
+     		ggplot2::geom_segment(data= df, mapping=ggplot2::aes(x=x3, y=y3, xend=x4, yend=y4))+ ggplot2::scale_x_continuous(expand = c(0, 0)) + ggplot2::scale_y_continuous(expand = c(0, 0))
+
+
 		}else{
 			bval_T_neg = NA
 		}
@@ -327,12 +361,12 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 # item >> MC_object >> methylation components object returned by mc.extract
 # item >> MC_contrib_CpG >> most contributing CpG sites for each component returned by the mc.active.sample function
 # item >> output.directory >> path to save output
+# item >> other_feature_to_test >> liste of other CpG feature to test  
 # author >> Lea Meunier
 # keyword >> visualisation
-#` @import plotrix
 # end
 
-enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_feature){
+enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_feature, other_feature_to_test = NA){
 	
 	order_feature = c("island", "shore", "shelf", "out")
 	color_feature =c("#7D0E3C", "#FF584E", "#FFA576", "#B1FADA")
@@ -358,56 +392,78 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 			dir.create(output.directory_tmp)
 		}
 		
-		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "gene_feature", CpG_feature = CpG_feature)
-		pdf(file.path(output.directory_tmp, paste0("Gene_feature_", comp, ".pdf")), width = 6, height = 6)
-		barplot(tmp_enrich[order_gene_feature], col = color_gene_feature)
-		dev.off()
 		
-		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "cgi_feature", CpG_feature = CpG_feature)
-		pdf(file.path(output.directory_tmp, paste0("CGI_feature_", comp, ".pdf")), width = 6, height = 6)
-		barplot(tmp_enrich[order_feature], col = color_feature)
-		dev.off()
-		
-		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "domain", CpG_feature = CpG_feature)
-		pdf(file.path(output.directory_tmp, paste0("Chromatin_state_", comp, ".pdf")), width = 6, height = 6)
-		barplot(tmp_enrich[order_active], col = color_active)
-		dev.off()
-		
-		tmp_enrich = as.numeric(enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "state", CpG_feature = CpG_feature)[ch.states])
-		names(tmp_enrich) = ch.states
-		tmp_enrich[is.na(tmp_enrich)]=0
-		pdf(file.path(output.directory_tmp, paste0("Chromatin_domain_", comp, ".pdf")), width = 6, height = 6)
-		par(bg=NA)
-		
-		testpos<-seq(0,350,length.out = 18)
-		echelle = pretty(range(tmp_enrich, na.rm = TRUE))
-		diam_echelle = max(echelle)
-		echelle_print_pos = seq(from = 0.5, to = diam_echelle, by = 1)
-		
-		names_cst18 = names(tmp_enrich)
-		names_cst18[which(tmp_enrich <1.1)]=""
-
-		oldpar<-plotrix::polar.plot(tmp_enrich,testpos,start=90,clockwise=TRUE,lwd=4,line.col=ch.states.col, show.grid.labels = 0, labels = names_cst18, label.prop = tmp_enrich[ch.states]/diam_echelle +0.15, radlab=FALSE, grid.col ="white", radial.lim = echelle, show.radial.grid = FALSE,boxed.radial = FALSE)
-	
-		a <- symbols(0,0,circles=1,fg="red",lwd=1.5, inches = FALSE, ylab ="", xlab="", lty=1, add=TRUE,xaxt = "n", yaxt = "n")
-	
-		for(j in echelle_print_pos[which(echelle_print_pos <diam_echelle)]){
-			if(j != 1){
-				symbols(0,0,circles=j,fg="grey",lwd=1, inches = FALSE, ylab ="", xlab="", lty=3, add=TRUE,xaxt = "n", yaxt = "n")
-			}
-			if(is.element(j, seq(0, 10, 1))){ text(j*0.75, j*0.75, labels = j)}
+		if(is.element("gene_feature", colnames(CpG_feature))){
+			tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "gene_feature", CpG_feature = CpG_feature)
+			pdf(file.path(output.directory_tmp, paste0("Gene_feature_", comp, ".pdf")), width = 6, height = 6)
+			barplot(tmp_enrich[order_gene_feature], col = color_gene_feature, ylab = "Enrichment score")
+			dev.off()
 		}
-		dev.off()
-
-		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "decile", CpG_feature = CpG_feature)
-		pdf(file.path(output.directory_tmp, paste0("Rep_timing_", comp, ".pdf")), width = 6, height = 6)
-		barplot(tmp_enrich[1:10], col = color_decile)
-		dev.off()
 		
-		tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "CpG_context", CpG_feature = CpG_feature)
-		pdf(file.path(output.directory_tmp, paste0("Domain_type_", comp, ".pdf")), width = 6, height = 6)
-		barplot(tmp_enrich[order_domain_type], col = color_domain_type)	
-		dev.off()
+		if(is.element("cgi_feature", colnames(CpG_feature))){
+			tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "cgi_feature", CpG_feature = CpG_feature)
+			pdf(file.path(output.directory_tmp, paste0("CGI_feature_", comp, ".pdf")), width = 6, height = 6)
+			barplot(tmp_enrich[order_feature], col = color_feature, ylab = "Enrichment score")
+			dev.off()
+		}
+		
+		if(is.element("domain", colnames(CpG_feature))){
+			tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "domain", CpG_feature = CpG_feature)
+			pdf(file.path(output.directory_tmp, paste0("Chromatin_state_", comp, ".pdf")), width = 6, height = 6)
+			barplot(tmp_enrich[order_active], col = color_active, ylab = "Enrichment score")
+			dev.off()
+		}
+		
+		if(is.element("state", colnames(CpG_feature))){
+			tmp_enrich = as.numeric(enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "state", CpG_feature = CpG_feature)[ch.states])
+			names(tmp_enrich) = ch.states
+			tmp_enrich[is.na(tmp_enrich)]=0
+			pdf(file.path(output.directory_tmp, paste0("Chromatin_domain_", comp, ".pdf")), width = 6, height = 6)
+			par(bg=NA)
+
+			testpos<-seq(0,350,length.out = 18)
+			echelle = pretty(range(tmp_enrich, na.rm = TRUE))
+			diam_echelle = max(echelle)
+			echelle_print_pos = seq(from = 0.5, to = diam_echelle, by = 1)
+		
+			names_cst18 = names(tmp_enrich)
+			names_cst18[which(tmp_enrich <1.1)]=""
+
+			oldpar<-plotrix::polar.plot(tmp_enrich,testpos,start=90,clockwise=TRUE,lwd=4,line.col=ch.states.col, show.grid.labels = 0, labels = names_cst18, label.prop = tmp_enrich[ch.states]/diam_echelle +0.15, radlab=FALSE, grid.col ="white", radial.lim = echelle, show.radial.grid = FALSE,boxed.radial = FALSE)
+	
+			a <- symbols(0,0,circles=1,fg="red",lwd=1.5, inches = FALSE, ylab ="", xlab="", lty=1, add=TRUE,xaxt = "n", yaxt = "n")
+	
+			for(j in echelle_print_pos[which(echelle_print_pos <diam_echelle)]){
+				if(j != 1){
+					symbols(0,0,circles=j,fg="grey",lwd=1, inches = FALSE, ylab ="", xlab="", lty=3, add=TRUE,xaxt = "n", yaxt = "n")
+				}
+				if(is.element(j, seq(0, 10, 1))){ text(j*0.75, j*0.75, labels = j)}
+			}
+			dev.off()
+		}
+
+		if(is.element("decile", colnames(CpG_feature))){
+			tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "decile", CpG_feature = CpG_feature)
+			pdf(file.path(output.directory_tmp, paste0("Rep_timing_", comp, ".pdf")), width = 6, height = 6)
+			barplot(tmp_enrich[as.character(1:10)], col = color_decile, ylab = "Enrichment score")
+			dev.off()
+		}
+		
+		if(is.element("CpG_context", colnames(CpG_feature))){
+			tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = "CpG_context", CpG_feature = CpG_feature)
+			pdf(file.path(output.directory_tmp, paste0("Domain_type_", comp, ".pdf")), width = 6, height = 6)
+			barplot(tmp_enrich[order_domain_type], col = color_domain_type, ylab = "Enrichment score")	
+			dev.off()
+		}
+		
+		if(is.na(other_feature_to_test)==FALSE){
+			for(col_feature in other_feature_to_test){
+				tmp_enrich = enrich.test(CpG_select = MC_contrib_CpG[[comp]], column = col_feature, CpG_feature = CpG_feature)
+				pdf(file.path(output.directory_tmp, paste0(col_feature,"_", comp, ".pdf")), width = 6, height = 6)
+				barplot(tmp_enrich, ylab = "Enrichment score")	
+				dev.off()
+			}
+		}
 	}
 }
 

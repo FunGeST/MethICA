@@ -1,23 +1,18 @@
 library(MethICA)
+library(MethICAdata)
+library(corrplot)
 
-
+data.directory <- file.path(.libPaths(), MethICAdata)
 
 
 ### 1. Load data
 # Methylation matrix, CpG table & sample annotation table.
-test.directory <- "~/Tools/MethICA/RUNNING_MethICA_example/LICAFR"
+test.directory <- "~/Documents/GitHub/output/"
 
-bval = load.RData('~/Google Drive/MethICA/RUNNING_MethICA_exemple/LICAFR/bval.Rdata')
-
-annot = read.table(file = "~/Documents/GitHub/MethICA/RUNNING_MethICA_example/LICAFR/LICAFR_annot.txt", header = T, stringsAsFactors=F)
-rownames(annot) = annot$SampleID
+load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
 
 
-CpG_feature = load.RData('~/Google Drive/MethICA/RUNNING_MethICA_exemple/LICAFR/CpG_feature.Rdata')
-# The chromatin_feature function may be used to annotate a CpG table with chromatin features.
-#CpG_table = load.RData('~/Google Drive/MethICA/data/CPG_feature_Illumina.RData')
-#CpG_feature = chromatin.feature(CpG_table = CpG_table, file_CpG_context = "~/Google Drive/MethICA/data/GSE113405_LIV_ADLT.MethylSeekR.segments.bed", name_col_CpG_context = "CpG_context", file_chrom_state = '~/Google Drive/MethICA/data/cst18_liver.RData', name_col_chrom_state = c("state", "active"), file_CGI = "~/Google Drive/MethICA/data/CGI-based_features_hg19.txt", name_col_CGI ="cgi_feature", file_genes = "~/Google Drive/MethICA/data/Gene-based_features_hg19.txt", name_col_genes = c("gene_name", "gene_feature"), file_replication ="~/Google Drive/MethICA/data/HepG2_replication_domains.RData", name_col_replication = "decile", add_seq_info = TRUE, save = TRUE, output.directory = output.directory)
-
+# To create the file CpG_feature use in the analysis, see the feature_table_script.R
 # Check that CpGs and samples have the same order in bval and annotation tables
 all(rownames(annot) == colnames(bval))
 all(rownames(bval) == rownames(CpG_feature))
@@ -26,11 +21,9 @@ output.directory = file.path(test.directory,"output")
 if(!file.exists(output.directory)){ dir.create(output.directory) }
 
 
-
-
 ### 2. Perform ICA
 # Select most variant CpG sites
-NmostVar = 10000 #recommended = 200000
+NmostVar = 200000 #recommended = 200000
 mysd <- apply(bval,1,sd)
 sel <- order(mysd,decreasing=T)[1:NmostVar]
 bval <- bval[sel,];dim(bval)
@@ -61,11 +54,62 @@ mc.change(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref = grep("N", col
 # Compute and represent enrichment of most contributing CpG sites within specific CGI-based features, chromatin states & methylation contexts.
 enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.directory, CpG_feature = CpG_feature)
 
+# Compute and represent enrichment of 48 CpG category in Zhou, W., Dinh, H.Q., Ramjan, Z., Weisenberger, D.J., Nicolet, C.M., Shen, H., Laird, P.W., and Berman, B.P. (2018). DNA methylation loss in late-replicating domains is linked to mitotic cell division. Nature Genetics 50, 591–602.
+
+# create table with catagorie
+CpG_feature$nb_flanking_CpG_reccod = CpG_feature$nb_flanking_CpG
+CpG_feature$nb_flanking_CpG_reccod[which(CpG_feature $nb_flanking_CpG_reccod>3)] = 3
+
+enrich_context = matrix(NA, nrow = nrow(CpG_feature), ncol = 4*4*3)
+rownames(enrich_context) = rownames(CpG_feature)
+colnames(enrich_context) = paste(rep(c("HMD", "PMD", "LMR", "UMR"), each = 12), rep(rep(3:0, each = 3), length = 48), rep(c("SCGS", "SCGW", "WCGW"), length = 48), sep = "_")
+
+i=1
+for(domain_type in c("HMD", "PMD", "LMR", "UMR")){
+	for(nb_flanking_CpG in c(3, 2, 1, 0)){
+		for(context in c("SCGS", "SCGW", "WCGW")){
+			enrich_context[which(CpG_feature$CpG_context == domain_type & CpG_feature$nb_flanking_CpG_reccod == nb_flanking_CpG & CpG_feature$context == context),i] = "yes"
+			i=i+1
+		}
+	}
+}
+enrich_context = rbind(enrich_context, rep("yes", ncol(enrich_context)))
+table_enrich_context = apply(enrich_context, 2, table)[colnames(enrich_context)]-1
+
+# compute enrichment in each component
+nbComp = length(MC_active_sample)
+
+matrice_enrich = matrix(NA, ncol = nbComp, nrow = 48)
+rownames(matrice_enrich) = names(table_enrich_context)
+colnames(matrice_enrich) = paste0("MC", 1: nbComp)
+
+for(i in 1:nbComp){
+	context = enrich_context[MC_contrib_CpG[[i]],]
+	context = rbind(context, rep("yes", ncol(context)))
+		
+	table_context = apply(context, 2, table)[colnames(enrich_context)]-1
+	matrice_enrich[,i] = (table_context / sum(table_context)) / (table_enrich_context / sum(table_enrich_context))
+
+}
+
+# scale for representation
+matrice_enrich = matrice_enrich-1 
+matrice_enrich[which(matrice_enrich>5)] = 5
+matrice_enrich[which(matrice_enrich <0)] = 0
+colnames(matrice_enrich) = rep("", length.out = ncol(matrice_enrich))
+
+cst_color <- colorRampPalette(c("white","white", "grey40"))(100 + 1)
+rownames(matrice_enrich) = rep("", nrow(matrice_enrich))
+
+pdf(file.path(output.directory, "CpG_context_Zhou.pdf"),width=8,height=8, bg = "transparent")
+par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+corrplot(matrice_enrich, col = cst_color, is.corr = FALSE, tl.col = "black", tl.cex = 1.1, mar=c(0,0,0,0), bg = "transparent",cl.lim = c(0,6))
+dev.off()
 
 
 
 ### 5. Association of MCs with sample annotations
-sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
+sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
 
 #Examples of representations for sample associations
 #boxplot
