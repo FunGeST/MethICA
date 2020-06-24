@@ -7,19 +7,13 @@ data.directory <- file.path(.libPaths(), MethICAdata)
 
 ### 1. Load data
 # Methylation matrix, CpG table & sample annotation table.
-test.directory <- "~/Documents/GitHub/output/"
-
-load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
-
-
-# To create the file CpG_feature use in the analysis, see the feature_table_script.R
-# Check that CpGs and samples have the same order in bval and annotation tables
-all(rownames(annot) == colnames(bval))
-all(rownames(bval) == rownames(CpG_feature))
-
-output.directory = file.path(test.directory,"output")
+output.directory = "~/Results/"
 if(!file.exists(output.directory)){ dir.create(output.directory) }
 
+data.directory <- file.path(.libPaths(), MethICAdata)
+load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
+
+# To create the file CpG_feature use in the analysis, see the feature_table_script.R
 
 ### 2. Perform ICA
 # Select most variant CpG sites
@@ -41,8 +35,13 @@ MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iterati
 # Extract the most contributing CpG sites for each MC
 MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
 
-# Extract the most contributing samples for each MC
-MC_active_sample = mc.active.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE))
+> # Extract the most contributing samples for each MC based on absolute value of contribution 
+> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
+
+> # Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
+> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+
+
 
 # Represent methylation changes in the most contributing samples vs. reference samples
 mc.change(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
@@ -96,10 +95,8 @@ for(i in 1:nbComp){
 matrice_enrich = matrice_enrich-1 
 matrice_enrich[which(matrice_enrich>5)] = 5
 matrice_enrich[which(matrice_enrich <0)] = 0
-colnames(matrice_enrich) = rep("", length.out = ncol(matrice_enrich))
 
 cst_color <- colorRampPalette(c("white","white", "grey40"))(100 + 1)
-rownames(matrice_enrich) = rep("", nrow(matrice_enrich))
 
 pdf(file.path(output.directory, "CpG_context_Zhou.pdf"),width=8,height=8, bg = "transparent")
 par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
@@ -109,7 +106,7 @@ dev.off()
 
 
 ### 5. Association of MCs with sample annotations
-sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
+Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
 
 #Examples of representations for sample associations
 #boxplot
