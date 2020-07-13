@@ -1,17 +1,17 @@
 library(MethICA)
-library(MethICAdata)
+library(MethICAdata) # Use devtools::install_github("FunGeST/MethICAdata") to install this package comprising test data
 library(corrplot)
 
-data.directory <- file.path(.libPaths(), MethICAdata)
 
 
 ### 1. Load data
 # Methylation matrix, CpG table & sample annotation table.
-output.directory = "~/Results/"
+data.directory <- file.path(.libPaths(), "MethICAdata")
+load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
+
+output.directory = "~/Test_MethICA/"
 if(!file.exists(output.directory)){ dir.create(output.directory) }
 
-data.directory <- file.path(.libPaths(), MethICAdata)
-load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
 
 # To create the file CpG_feature use in the analysis, see the feature_table_script.R
 
@@ -35,11 +35,11 @@ MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iterati
 # Extract the most contributing CpG sites for each MC
 MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
 
-> # Extract the most contributing samples for each MC based on absolute value of contribution 
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on absolute value of contribution 
+MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
 
-> # Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
+MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
 
 
 
