@@ -35,11 +35,11 @@ MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iterati
 # Extract the most contributing CpG sites for each MC
 MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
 
-> # Extract the most contributing samples for each MC based on absolute value of contribution 
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on absolute value of contribution 
+MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
 
-> # Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
+MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
 
 
 
