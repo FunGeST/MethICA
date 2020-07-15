@@ -1,19 +1,22 @@
 library(MethICA)
-library(MethICAdata)
+library(MethICAdata) # Use devtools::install_github("FunGeST/MethICAdata") to install this package comprising test data
 library(corrplot)
 
-data.directory <- file.path(.libPaths(), MethICAdata)
+
 
 
 ### 1. Load data
 # Methylation matrix, CpG table & sample annotation table.
-output.directory = "~/Results/"
-if(!file.exists(output.directory)){ dir.create(output.directory) }
-
-data.directory <- file.path(.libPaths(), MethICAdata)
+data.directory <- file.path(.libPaths(), "MethICAdata")
 load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
 
-# To create the file CpG_feature use in the analysis, see the feature_table_script.R
+output.directory = "~/Test_MethICA/"
+if(!file.exists(output.directory)){ dir.create(output.directory) }
+
+# To create the CpG_feature file adapted to your own tissue type, see the 'feature_table_script.R' script.
+
+
+
 
 ### 2. Perform ICA
 # Select most variant CpG sites
@@ -35,11 +38,11 @@ MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iterati
 # Extract the most contributing CpG sites for each MC
 MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
 
-> # Extract the most contributing samples for each MC based on absolute value of contribution 
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on absolute value of contribution 
+MC_active_sample = mc.active.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1))
 
-> # Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
-> MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+# Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
+MC_active_sample = mc.active.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE))
 
 
 
@@ -53,9 +56,8 @@ mc.change(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref = grep("N", col
 # Compute and represent enrichment of most contributing CpG sites within specific CGI-based features, chromatin states & methylation contexts.
 enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.directory, CpG_feature = CpG_feature)
 
-# Compute and represent enrichment of 48 CpG category in Zhou, W., Dinh, H.Q., Ramjan, Z., Weisenberger, D.J., Nicolet, C.M., Shen, H., Laird, P.W., and Berman, B.P. (2018). DNA methylation loss in late-replicating domains is linked to mitotic cell division. Nature Genetics 50, 591–602.
-
-# create table with catagorie
+# Compute and represent enrichment of 48 CpG categories as in Zhou W et al. (Nat Genet 2018)
+# create table with categories
 CpG_feature$nb_flanking_CpG_reccod = CpG_feature$nb_flanking_CpG
 CpG_feature$nb_flanking_CpG_reccod[which(CpG_feature $nb_flanking_CpG_reccod>3)] = 3
 
@@ -105,13 +107,13 @@ dev.off()
 
 
 
+
 ### 5. Association of MCs with sample annotations
-Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
+sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
 
 #Examples of representations for sample associations
 #boxplot
 boxplot(MC_object$Sample_contrib[,"MC13"]~ annot[,"CTNNB1.alt"], col = c("grey30", "grey95"), ylab = "Sample contribution", xlab = "CTNNB1 status", main = "MC13 vs CTNNB1 status")
-
 
 #corrplot for univariate analysis
 pvaltab_mol = as.matrix(factoall(sample.assoc$pval_uni[,2:ncol(sample.assoc$pval_uni)]))
