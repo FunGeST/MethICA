@@ -6,15 +6,17 @@ Methylation signature analysis with independent component analysis.
 Description: apply independent component analysis (ICA) to methylation data to extract epigenetic signatures and perform downstream analyses and representations to interpret the biological meaning of methylation components.
 
 ## Installation
-========
+
 Install from the GitHub repository using devtools:
 
 install.packages("devtools")
+
 library(devtools)
+
 devtools::install_github("FunGeST/MethICA")
 
 ## Input files
-========
+
 For the extraction of methylation signature _MethICA_ requires one mandatory input file -- a **methylation level** file (bval) describing methylation levels of individual CpG sites or genomic regions (row) in each sample (column). Two additional files are needed for the interpretation of methylation components: a **CpG annotation** file describing the epigenetic context of CpG sites, and a **sample annotation** providing any relevant information about the samples.
 
 **The input files should have the following format. Example input files are provided with the package.**
@@ -47,14 +49,14 @@ For the extraction of methylation signature _MethICA_ requires one mandatory inp
 * add in column the annotations you are interested in testing
 
 ## Running MethICA
-================
+
 
 * The [RUNNING\_METHICA\_EXAMPLE](https://github.com/FunGeST/MethICA) folder contains an example dataset and an R script of a typical MethICA analysis. Please try!</br>
 * [*Introduction to MethICA*] provides a comprehensive example of the MethICA workflow with detailed  explanations of each function.</br> 
 
 
 ## License
-========
+
 
 Copyright (C) 2020 Léa Meunier
 
