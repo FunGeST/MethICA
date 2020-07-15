@@ -1,5 +1,4 @@
-MethICA
-========
+# MethICA
 
 Methylation signature analysis with independent component analysis.
 
@@ -9,11 +8,10 @@ Description: apply independent component analysis (ICA) to methylation data to e
 
 Install from the GitHub repository using devtools:
 
-install.packages("devtools")
-
+"""install.packages("devtools")
 library(devtools)
-
 devtools::install_github("FunGeST/MethICA")
+"""
 
 ## Input files
 
