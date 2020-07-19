@@ -3,8 +3,6 @@ library(MethICAdata) # Use devtools::install_github("FunGeST/MethICAdata") to in
 library(corrplot)
 
 
-
-
 ### 1. Load data
 # Methylation matrix, CpG table & sample annotation table.
 data.directory <- file.path(.libPaths(), "MethICAdata")
@@ -14,9 +12,6 @@ output.directory = "~/Test_MethICA/"
 if(!file.exists(output.directory)){ dir.create(output.directory) }
 
 # To create the CpG_feature file adapted to your own tissue type, see the 'feature_table_script.R' script.
-
-
-
 
 ### 2. Perform ICA
 # Select most variant CpG sites

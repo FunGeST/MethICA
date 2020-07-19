@@ -555,11 +555,120 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 
 
 
+# Rd
+# description >> Compute and represent enrichment of 48 CpG categories as in Zhou W et al. (Nat Genet 2018)
+# argument
+# item >> CpG_feature >> table with CpG annotation 
+# item >> MC_contrib_CpG >> most contributing CpG sites for each component returned by the mc.active.CpG function
+# item >> MC_active_sample >> most contributing samples for each component returned by the mc.active.CpG function
+# value >> return matrice CpG_feature with 48 CpG categories as in Zhou W et al. (Nat Genet 2018)
+# author >> Lea Meunier
+# keyword >> methods
+# end
+
+enrich.CpG.domain <- function(CpG_feature, MC_contrib_CpG, MC_active_sample){
+		
+	CpG_feature$nb_flanking_CpG_reccod = CpG_feature$nb_flanking_CpG
+	CpG_feature$nb_flanking_CpG_reccod[which(CpG_feature $nb_flanking_CpG_reccod>3)] = 3
+
+	enrich_context = matrix(NA, nrow = nrow(CpG_feature), ncol = 4*4*3)
+	rownames(enrich_context) = rownames(CpG_feature)
+	colnames(enrich_context) = paste(rep(c("HMD", "PMD", "LMR", "UMR"), each = 12), rep(rep(3:0, each = 3), length = 48), rep(c("SCGS", "SCGW", "WCGW"), length = 48), sep = "_")
+
+	i=1
+	for(domain_type in c("HMD", "PMD", "LMR", "UMR")){
+		for(nb_flanking_CpG in c(3, 2, 1, 0)){
+			for(context in c("SCGS", "SCGW", "WCGW")){
+				enrich_context[which(CpG_feature$CpG_context == domain_type & CpG_feature$nb_flanking_CpG_reccod == nb_flanking_CpG & CpG_feature$context == context),i] = "yes"
+				i=i+1
+			}
+		}
+	}
+	enrich_context = rbind(enrich_context, rep("yes", ncol(enrich_context)))
+	table_enrich_context = apply(enrich_context, 2, table)[colnames(enrich_context)]-1
+
+	# compute enrichment in each component
+	nbComp = length(MC_active_sample)
+
+	matrice_enrich = matrix(NA, ncol = nbComp, nrow = 48)
+	rownames(matrice_enrich) = names(table_enrich_context)
+	colnames(matrice_enrich) = paste0("MC", 1: nbComp)
+
+	for(i in 1:nbComp){
+		context = enrich_context[MC_contrib_CpG[[i]],]
+		context = rbind(context, rep("yes", ncol(context)))
+		
+		table_context = apply(context, 2, table)[colnames(enrich_context)]-1
+		matrice_enrich[,i] = (table_context / sum(table_context)) / (table_enrich_context / sum(table_enrich_context))
+
+	}
+
+	# scale for representation
+	matrice_enrich = matrice_enrich-1 
+	matrice_enrich[which(matrice_enrich>5)] = 5
+	matrice_enrich[which(matrice_enrich <0)] = 0
+
+	cst_color <- colorRampPalette(c("white","white", "grey40"))(100 + 1)
+
+	pdf(file.path(output.directory, "CpG_context_Zhou.pdf"),width=10,height=10, bg = "transparent")
+	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+	corrplot::corrplot(matrice_enrich, col = cst_color, is.corr = FALSE, tl.col = "black", tl.cex = 1.1, mar=c(0,0,1,0), bg = "transparent",cl.lim = c(0,6))
+	dev.off()
+	
+	return(CpG_feature)
+
+}
 
 
 
+# Rd
+# description >> represent association between components and annotation in a corrplot 
+# argument
+# item >> pvaltab_uni >> pvalue of univariate analysis
+# item >> pvaltab_multi >> pvalue of multivariate analysis
+# value >>
+# author >> Lea Meunier
+# keyword >> representation
+# end
 
+association.corrplot <- function(pvaltab_uni, pvaltab_multi){
+	#need to convert p-value in entier number for the corrplot function
+	log_scale = 10^-(seq(0,10, length.out=160)) 
+	log_scale[length(log_scale)] = 0 
+	log_scale = as.numeric(log_scale)
+	#scale for the corrplot function
+	names(log_scale) = 1:160
 
+	#univariate analysis
+	#assign each p-value to the scale
+	tmp_mat = pvaltab_uni
+	for(i in 1:ncol(pvaltab_uni)){
+		for(j in 1:nrow(pvaltab_uni)){
+			tmp_mat[j,i] = as.numeric(names(log_scale[which(log_scale <(pvaltab_uni[j,i]))])[1])
+		}
+	}
+	
+	pdf(file.path(output.directory, "assos_uni_corrplot.pdf"),width=10,height=10, bg = "transparent")
+	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+	corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black', tl.cex = 1.1, mar=c(0,0,1,0))
+	dev.off()
+	
+	#same for multivariate analysis
+	#replace NA by 1
+	pvaltab_multi[which(is.na(pvaltab_multi))]=1
+
+	tmp_mat = pvaltab_multi
+	for(i in 1:ncol(pvaltab_multi)){
+		for(j in 1:nrow(pvaltab_multi)){
+			tmp_mat[j,i] = as.numeric(names(log_scale[which(log_scale <(pvaltab_multi[j,i]))])[1])
+		}
+	}
+
+	pdf(file.path(output.directory, "assos_multi_corrplot.pdf"),width=10,height=10, bg = "transparent")
+	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+	corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black', tl.cex = 1.1, mar=c(0,0,1,0))
+	dev.off()
+}
 
 
 
