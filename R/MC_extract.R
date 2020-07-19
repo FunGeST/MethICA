@@ -649,7 +649,7 @@ association.corrplot <- function(pvaltab_uni, pvaltab_multi){
 	}
 	
 	pdf(file.path(output.directory, "assos_uni_corrplot.pdf"),width=10,height=10, bg = "transparent")
-	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+	par(oma = c(0,0,0,0), xpd=TRUE, col = "black", mar=c(0,0,0,0), bg = "transparent")	
 	corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black', tl.cex = 1.1, mar=c(0,0,1,0))
 	dev.off()
 	
@@ -665,7 +665,7 @@ association.corrplot <- function(pvaltab_uni, pvaltab_multi){
 	}
 
 	pdf(file.path(output.directory, "assos_multi_corrplot.pdf"),width=10,height=10, bg = "transparent")
-	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
+	par(oma = c(0,0,0,0), xpd=TRUE, col = "black", mar=c(0,0,0,0), bg = "transparent")	
 	corrplot::corrplot(tmp_mat, is.corr=FALSE, tl.col = 'black', tl.cex = 1.1, mar=c(0,0,1,0))
 	dev.off()
 }

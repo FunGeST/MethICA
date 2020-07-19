@@ -15,7 +15,7 @@ if(!file.exists(output.directory)){ dir.create(output.directory) }
 
 ### 2. Perform ICA
 # Select most variant CpG sites
-NmostVar = 100000 #recommended = 200000
+NmostVar = 100000 #recommended = 100000
 mysd <- apply(bval,1,sd)
 sel <- order(mysd,decreasing=T)[1:NmostVar]
 bval <- bval[sel,];dim(bval)
@@ -24,7 +24,7 @@ CpG_feature <- CpG_feature[rownames(bval),]
 # Run ICA
 # function mc_extract (input: bval matrix | outputs: MC object with two matrices giving the contribution of CpGs and samples to each component)
 # Performs n iterations of ICA, computes stability and chooses the most stable iteration
-MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = FALSE, nb_iteration = 20, output.directory = output.directory, save = TRUE)
+MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iteration = 20, output.directory = output.directory, save = TRUE)
 
 
 
@@ -63,7 +63,7 @@ sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory
 
 #Examples of representations for sample associations
 #boxplot
-boxplot(MC_object$Sample_contrib[,"MC13"]~ annot[,"CTNNB1.alt"], col = c("grey30", "grey95"), ylab = "Sample contribution", xlab = "CTNNB1 status", main = "MC13 vs CTNNB1 status")
+boxplot(MC_object$Sample_contrib[,"MC9"]~ annot[,"CTNNB1.alt"], col = c("grey30", "grey95"), ylab = "Sample contribution", xlab = "CTNNB1 status", main = "MC9 vs CTNNB1 status")
 
 #corrplot for univariate analysis
 association.corrplot(pvaltab_uni = as.matrix(factoall(sample.assoc$pval_uni[,2:ncol(sample.assoc$pval_uni)])), pvaltab_multi = as.matrix(factoall(sample.assoc$pval_multi)))
