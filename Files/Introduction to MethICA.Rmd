@@ -1,7 +1,7 @@
 ---
 title: "Introduction to MethICA"
 author: "Lea Meunier"
-date: "5/31/2020"
+date: "2020/07/21"
 output:
   html_document: default
   pdf_document: default
@@ -68,18 +68,17 @@ if(!file.exists()){
 }
 ```
 
-We provide example datasets from our hepatocellular carcinoma study containing bval methylation table, annotation table and CpG feature for liver data that can be loaded as follows:
+We provide example datasets from our hepatocellular carcinoma study containing bval methylation table, annotation table and CpG feature for liver data that can be loaded here: https://drive.google.com/drive/folders/1BTQOhvI_qQou1CD94N_TCV_TEbcBC671?usp=sharing
 ```{r chargeLICAFR, eval = FALSE, echo = TRUE}
-# carge example dataset> 
-devtools::install_github("FunGeST/MethICA")
-data.directory <- file.path(.libPaths(), MethICAdata)
-load(file.path(data.directory,'/data/LICAFR_methylation.Rdata'),verbose = T)
+# load example dataset> 
+data.directory <- "~/Downloads/MethICAdata/"
+load(file.path(data.directory,'LICAFR_methylation.Rdata'),verbose = T)
 ```
 
 Select the most variant CpG sites (based on standard deviation) for the analysis.
 ```{r selectMostVar, eval = FALSE, echo = TRUE}
 # Select most variant CpG sites 
-NmostVar = 200000
+NmostVar = 100000
 mysd <- apply(bval,1,sd)
 sel <- order(mysd,decreasing=T)[1:NmostVar]
 # Reduce bval and CpG_feature matrix
@@ -98,7 +97,7 @@ MethICA uses various (epi)genomic annotations of CpG sites to interpret methylat
 <li>file_replication : replication timing deciles obtained from Repli-Seq data availbale on the ENCODE project data portal. Here we used Repli-Seq from HepG2 cell line accessible under GEO accession number GSM923446 (liver specific) <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923446> 
 </ul>
 
-<p> Script use to generated CpG_feature.Rdata (feature_table_script) are provide in the RUNNING_MethICA_example folder, data use are in the MethICA_data package.
+<p> The script used to extensively annotate CpG features (feature_table_script.R) is provided in the RUNNING_MethICA_example folder. It uses various types of (epi)genomic data (CpG islands, genes, chromatin states, methylation domains) to annotate the tissue-specific context of each CpG site:
 
 ```{r CpGfeature_create_table, eval = FALSE, echo = TRUE}
 load(file.path(data.directory,'/data/hg19_genome_feature.Rdata'),verbose = T)
@@ -212,17 +211,17 @@ Examples of outputs:
 
 # Explore epigenomic characteristics of the most contributing CpGs
 
-To better understand the components, we then explore the characteristics of their most contributing CpGs. The enrich.CpG.feature function computes enrichment scores of CpGs across epigenomic features from the CpG_feature table and generates various visual outputs. The example below shows a hypermethylation component affecting preferentially CpG sites located in CpG islands near transcription start sites, with bivalent chromatin state. With the "other_feature_to_test" option, enrich.CpG.feature function can compute enrichment and generate barplot for other feature.
+To better understand the components, we then explore the characteristics of their most contributing CpGs. The enrich.CpG.feature function computes enrichment scores of CpGs across epigenomic features from the CpG_feature table and generates various visual outputs. The example below shows a hypermethylation component affecting preferentially CpG sites located in CpG islands near transcription start sites, with bivalent chromatin state. The "other_feature_to_test" option of enrich.CpG.feature function allows to compute enrichment and generate barplots for any additional feature.
 
 ```{r enrich_CpG, eval = FALSE, echo = TRUE}
-# Association of MCw with (epi)genomic characteristics
+# Association of MCs with (epi)genomic characteristics
 enrich.CpG.feature(MC_object, MC_contrib_CpG, output.directory = output.directory, CpG_feature = CpG_feature)
 ```
 
 Example of outputs for MC5 component: 
 ![methylation change](./CpG_feature.png){width=80% height=80%}
 
-<p> In the Zhou et al. paper (Zhou, W., Dinh, H.Q., Ramjan, Z., Weisenberger, D.J., Nicolet, C.M., Shen, H., Laird, P.W., and Berman, B.P. (2018). DNA methylation loss in late-replicating domains is linked to mitotic cell division. Nature Genetics 50, 591–602.) CpG are split in 48 categories depending of the methylation domain, number of flanking CpG and adjacent nucleotide, and the team observe different methylation modification during time. In MethICA with add this CpG information, performe an enrichment analysis and representation to have in on figure, all the enrichment results.</p>
+<p> Zhou et al. described 48 CpG categories based on the methylation domain, number of flanking CpG and adjacent nucleotides (Zhou et al., Nat Genet 2018) that are more or less prone to hypomethylation in human tissues. MethICA allows to annotate these CpG categories, compute and represent enrichments of MCs most contributing CpG sites within these categories.</p>
 
 ```{r enrich_CpG_Zhou, eval = FALSE, echo = TRUE}
 # Compute and represent enrichment of 48 CpG categories as in Zhou W et al. (Nat Genet 2018)
@@ -243,9 +242,9 @@ CpG_feature = enrich.CpG.domain(CpG_feature = CpG_feature, MC_contrib_CpG = MC_c
 Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
 ```
 
-Exemples of possible representation with this results :
+Examples of possible representation with this results :
 <ul>
-<li> boxplot for one components vs one anotation
+<li> boxplot for one component vs one feature
 </ul>
 
 ```{r assos_annot_exemples, eval = FALSE, echo = TRUE}
@@ -258,11 +257,11 @@ boxplot(MC_object$Sample_contrib[,"MC13"]~ annot[,"CTNNB1.alt"], col = c("grey30
 
 
 <ul>
-<li> corrplot for all components vs all anotations (left = univariate, rigth = multivariate): 
+<li> corrplot of all components vs all features (top = univariate, bottom = multivariate): 
 </ul>
 
 ```{r assos_annot_exemples_corrplot, eval = FALSE, echo = TRUE}
-#corrplot representation for univariate and multivariate analysis
+#corrplot representation for univariate and multivariate analyses
 association.corrplot(pvaltab_uni = as.matrix(factoall(sample.assoc$pval_uni[,2:ncol(sample.assoc$pval_uni)])), pvaltab_multi = as.matrix(factoall(sample.assoc$pval_multi)))
 ```
  
