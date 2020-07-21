@@ -50,10 +50,10 @@ For the extraction of methylation signature _MethICA_ requires one mandatory inp
 ## Running MethICA
 
 
-* [*Introduction to MethICA*](https://nbviewer.jupyter.org/github/FunGeST/MethICA/blob/master/Files/Introduction-to-MethICA.html) provides a comprehensive example of the MethICA workflow with detailed  explanations of each function.</br> 
 * The [RUNNING\_METHICA\_EXAMPLE](https://github.com/FunGeST/MethICA/tree/master/RUNNING_MethICA_example) folder contains an example R script (MethICA_example_script.R) for a typical MethICA analysis. 
 Test data can be downloaded here: https://drive.google.com/drive/folders/1BTQOhvI_qQou1CD94N_TCV_TEbcBC671?usp=sharing
 Please try!</br>
+* [*Introduction to MethICA*](https://nbviewer.jupyter.org/github/FunGeST/MethICA/blob/master/Files/Introduction-to-MethICA.html) provides a comprehensive example of the MethICA workflow with detailed  explanations of each function.</br> 
 
 
 ## License
