@@ -11,7 +11,7 @@ data.directory <- "~/Downloads/MethICAdata/" # Indicate here the path to test da
 load(file.path(data.directory,'LICAFR_methylation.Rdata'),verbose = T)
 
 output.directory = "~/Test_MethICA/"
-if(!file.exists(output.directory)){ dir.create(output.directory) }
+if(!dir.exists(output.directory)){ dir.create(output.directory) }
 
 # To create the CpG_feature file adapted to your own tissue type, see 'feature_table_script.R'.
 
@@ -55,12 +55,12 @@ CpG_feature = enrich.CpG.domain(CpG_feature = CpG_feature, MC_contrib_CpG = MC_c
 sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
 
 #corrplot for univariate and multivariate associations
-association.corrplot(pvaltab_uni = as.matrix(factoall(sample.assoc$pval_uni[,2:ncol(sample.assoc$pval_uni)])), pvaltab_multi = as.matrix(factoall(sample.assoc$pval_multi)))
+association.corrplot(pvaltab_uni = sample.assoc$pval_uni , pvaltab_multi = sample.assoc$pval_multi)
 
 #Examples of representations for some associations (check association tables for relevant associations to plot)
 #boxplot
 boxplot(MC_object$Sample_contrib[,"MC11"]~ annot[,"CTNNB1.alt"], col = c("grey30", "grey95"), ylab = "Sample contribution", xlab = "CTNNB1 status", main = "MC11 vs CTNNB1 status")
-boxplot(MC_object$Sample_contrib[,"MC8"]~ annot[,"Gender"], col = c("pink", "royalblue"), ylab = "Sample contribution", xlab = "CTNNB1 status", main = "MC8 vs gender")
+boxplot(MC_object$Sample_contrib[,"MC8"]~ annot[,"Gender"], col = c("pink", "royalblue"), ylab = "Sample contribution", xlab = "Gender", main = "MC8 vs gender")
 
 
 

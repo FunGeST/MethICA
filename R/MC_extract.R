@@ -36,12 +36,12 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 		if(missing(output.directory)){
 			stop("missing output.directory")
 		}else{
-			if(!file.exists(output.directory)){
+			if(!dir.exists(output.directory)){
 				dir.create(output.directory)
 			}
 			if(compute_stability == TRUE ){	
 				compute_stability_it = file.path(output.directory, "iterations/")
-				if(!file.exists(compute_stability_it)){
+				if(!dir.exists(compute_stability_it)){
 					dir.create(compute_stability_it)
 				}
 				write.table(it_1$S, file = file.path(compute_stability_it, "it_1_S.txt"), sep = "\t")
@@ -70,8 +70,8 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 			# save results of iteration
 			assign(paste0("it_",i), it_tmp)
 			if(save == TRUE){
-				write.table(get(paste0("it_",i, ""))$S, file = file.path(compute_stability_it, paste0("it_",i, "_S.txt")), sep = "\t")
-				write.table(get(paste0("it_",i, ""))$A, file = file.path(compute_stability_it, paste0("it_",i, "_A.txt")), sep = "\t")
+				write.table(get(paste0("it_",i, ""))$S, file = file.path(compute_stability_it, paste0("it_",i, "_S.txt")), sep = "\t", quote=F)
+				write.table(get(paste0("it_",i, ""))$A, file = file.path(compute_stability_it, paste0("it_",i, "_A.txt")), sep = "\t", quote=F)
 			}
 
 			# compute correlation between iterations
@@ -108,7 +108,7 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 		cor_matrix = cbind(iteration = rownames(cor_matrix), cor_matrix)
 		
 		if(save == TRUE){
-			write.table(cor_matrix, file = file.path(output.directory, "cor_it_matrix.txt"), sep = '\t', col.names = TRUE, row.names = TRUE)
+			write.table(cor_matrix, file = file.path(output.directory, "cor_it_matrix.txt"), sep = '\t', col.names = TRUE, row.names = FALSE, quote=F)
 		}
 		
 	}else{
@@ -122,10 +122,10 @@ mc.extract <- function(bval, nb_comp = 20, compute_stability = TRUE, nb_iteratio
 	colnames(Sample_contrib) = paste0("MC", 1:nb_comp)
 
 	if(save == TRUE){
-		CpG_contrib_save = cbind(CpG = rownames(CpG_contrib), CpG_contrib)
-		write.table(CpG_contrib_save, file = file.path(output.directory, "CpG_contrib.txt"))	
-		Sample_contrib_save = cbind(Sample = rownames(Sample_contrib), Sample_contrib)	
-		write.table(Sample_contrib, file = file.path(output.directory, "Sample_contrib.txt"))		
+		CpG_contrib_save = data.frame(CpG = rownames(CpG_contrib), CpG_contrib)
+		write.table(CpG_contrib_save, file = file.path(output.directory, "CpG_contrib.txt"), quote = F, row.names = F, sep = "\t")	
+		Sample_contrib_save = data.frame(Sample = rownames(Sample_contrib), Sample_contrib)	
+		write.table(Sample_contrib, file = file.path(output.directory, "Sample_contrib.txt"), quote=F, sep = "\t")	
 	}
 
 	return(list("CpG_contrib" = CpG_contrib, "Sample_contrib" = Sample_contrib, "stability" = stability))
@@ -333,18 +333,18 @@ mc.change <- function(MC_object, MC_active_sample, MC_contrib_CpG, bval, ref, ou
 		
 		if(length(samples_active_moins)>5 & length(samples_active_plus)>5){
 		  pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, "_positive_samples.pdf")), width = 5, height = 5)			
-		   print(p1)
+		  suppressWarnings(print(p1))
 		  dev.off()
 		  pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, "_negative_samples.pdf")), width = 5, height = 5)			
-		   print(p2)
+		  suppressWarnings(print(p2))
 		  dev.off()
 		}else if(length(samples_active_plus)>5){
 			pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, ".pdf")), width = 5, height = 5)			
-				print(p1)
+		  suppressWarnings(print(p1))
 			dev.off()
 		}else if(length(samples_active_moins)>5){
 			pdf(file.path(output.directory_tmp, paste0("meth_change_", comp, ".pdf")), width = 5, height = 5)			
-				print(p2)
+		  suppressWarnings(print(p2))
 			dev.off()
 		}
 
@@ -478,13 +478,13 @@ enrich.CpG.feature <- function(MC_object, MC_contrib_CpG, output.directory, CpG_
 # item >> selcol >> selection of annotations to be included in univariate analysis (by default all columns will be used)
 # item >> save >> if TRUE, save results to the output.directory
 # item >> output.directory >> path to save output
-# item >> multi_theshold >> p-value threshold to include an annotation in the multivariate analysis
+# item >> multi_threshold >> p-value threshold to include an annotation in the multivariate analysis
 # value >> returns two matrices : p-values of univariate analysis and p-values of multivariate analysis
 # author >> Lea Meunier
 # keyword >> association
 # end
 
-mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, multi_theshold = 0.001){
+mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, output.directory, multi_threshold = 0.001){
 	annot = factoall(annot)
 	annotS = annot[, selcol]
 	contrib = MC_object$Sample_contrib
@@ -501,15 +501,13 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 	}
     if(save == TRUE){
     	pval_uni = pval
-    	save(pval_uni, file = file.path(output.directory,"IC_vs_clinical_annot.Rdata"))
-    	pval_uni = data.frame(annot = rownames(pval_uni), pval_uni)
-		write.table(pval_uni,file.path(output.directory,"IC_vs_clinical_annot_univariate.txt"),sep="\t",quote=F,row.names=F)
+    	pval_uni_print = data.frame(annot = rownames(pval_uni), pval_uni)
+		  write.table(pval_uni_print,file.path(output.directory,"IC_vs_clinical_annot_univariate.txt"),sep="\t",quote=F,row.names=F)
     }
-    
         
 	for(sig in colnames(pval)){
 
-		sign.fac <- colnames(annotS)[which(pval[,sig] < multi_theshold)]
+		sign.fac <- colnames(annotS)[which(pval[,sig] < multi_threshold)]
 
 		if(length(sign.fac)>0){
 			formula <- paste0("contrib[,sig] ~ annotS$", sign.fac[1])
@@ -521,10 +519,7 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 			if(sig==colnames(pval)[1])	multiv <- tmp	else		multiv <- rbind(multiv,tmp)
 		}
 	}
-	multiv <- multiv[which(multiv$p.value < 0.1),]
-	write.table(multiv,file.path(output.directory,"IC_vs_clinical_annot_multivariate.txt"),sep="\t",quote=F,row.names=F)
 
-	
 	pval_multi = matrix(NA, nrow = ncol(annotS), ncol = ncol(contrib))
 	rownames(pval_multi) = rownames(pval)
 	colnames(pval_multi) = colnames(contrib)
@@ -544,9 +539,8 @@ mc.annot <- function(MC_object, annot, selcol = colnames(annot), save = FALSE, o
 			}		
 		}
 	}
-	save(pval_multi,file = file.path(output.directory,"IC_vs_clinical_annot_multi.Rdata"))
-	annot_multi = data.frame(annot = rownames(pval_multi), pval_multi)
-	write.table(annot_multi, file.path(output.directory,"IC_vs_clinical_annot_multi.txt"),sep="\t",quote=F,row.names=F)
+	pval_multi_print = data.frame(annot = rownames(pval_multi), pval_multi)
+	write.table(pval_multi_print, file.path(output.directory,"IC_vs_clinical_annot_multivariate.txt"),sep="\t",quote=F,row.names=F)
 
 	return(list("pval_uni" = pval_uni, "pval_multi" = pval_multi))
 }
@@ -609,10 +603,10 @@ enrich.CpG.domain <- function(CpG_feature, MC_contrib_CpG, MC_active_sample){
 	matrice_enrich[which(matrice_enrich <0)] = 0
 
 	cst_color <- colorRampPalette(c("white","white", "grey40"))(100 + 1)
-
+  
 	pdf(file.path(output.directory, "CpG_context_Zhou.pdf"),width=10,height=10, bg = "transparent")
 	par(oma = c(0,0,0,0), xpd=TRUE, col = "white", mar=c(0,0,0,0), bg = "transparent")	
-	corrplot::corrplot(matrice_enrich, col = cst_color, is.corr = FALSE, tl.col = "black", tl.cex = 1.1, mar=c(0,0,1,0), bg = "transparent",cl.lim = c(0,6))
+	suppressWarnings(corrplot::corrplot(matrice_enrich, col = cst_color, is.corr = FALSE, tl.col = "black", tl.cex = 1.1, mar=c(0,0,1,0), bg = "transparent",cl.lim = c(0,6)))
 	dev.off()
 	
 	return(CpG_feature)
@@ -631,8 +625,8 @@ enrich.CpG.domain <- function(CpG_feature, MC_contrib_CpG, MC_active_sample){
 # keyword >> representation
 # end
 
-association.corrplot <- function(pvaltab_uni, pvaltab_multi){
-	#need to convert p-value in entier number for the corrplot function
+association.corrplot <- function(pvaltab_uni = NULL , pvaltab_multi = NULL){
+  #need to convert p-value to integer for the corrplot function
 	log_scale = 10^-(seq(0,10, length.out=160)) 
 	log_scale[length(log_scale)] = 0 
 	log_scale = as.numeric(log_scale)

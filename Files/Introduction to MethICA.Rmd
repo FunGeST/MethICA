@@ -3,8 +3,8 @@ title: "Introduction to MethICA"
 author: "Lea Meunier"
 date: "2020/07/21"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -57,14 +57,15 @@ Once installed, load the package and you’re ready to go!
 ```{r chargepackage, eval = FALSE, echo = TRUE}
 # Load MethICA package
 library(MethICA)
+library(corrplot)
 ```
 
 Define output directories.
 ```{r chargedata, eval = FALSE, echo = TRUE}
 # define output directory> 
-output.directory <- "~/Results/"> 
-if(!file.exists()){
- dir.create(output.directory)
+output.directory = "~/Test_MethICA/"
+if(!dir.exists(output.directory)){
+  dir.create(output.directory)
 }
 ```
 
@@ -88,84 +89,17 @@ CpG_feature <- CpG_feature[rownames(bval),]
 
 ## Prepare CpG annotation table
 
-MethICA uses various (epi)genomic annotations of CpG sites to interpret methylation components. Make sure you use correct annotations for the tissue under study. For example, the CpG_feature.Rdata file included in the package corresponds the CpG annotation table of liver tissue used in our hepatocellular carcinoma study. We provide the chromatin.feature function to annotate your own CpG table. It requires different inputs for each (epi)genomic feature that can be obtained from various sources:
+MethICA uses various (epi)genomic annotations of CpG sites to interpret methylation components. Make sure you use correct annotations for the tissue under study. For example, the CpG_feature.Rdata file included in the package corresponds the CpG annotation table of liver tissue used in our hepatocellular carcinoma study. We provide the chromatin.feature function to annotate your own CpG table. It requires different inputs for each (epi)genomic feature that can be obtained from various sources. For example, here are the links we used for our study:
 <ul>
-<li>file_CGI : CpG island-based features (Island, Shore, Shelf, out of cgi) from UCSC (no liver specific)
-<li>file_genes : gene-based features (body, TSS500) from GENCODE <https://www.gencodegenes.org/human/release_34lift37.html>
+<li>file_CGI : CpG island-based features (Island, Shore, Shelf, out of cgi) from UCSC (not liver specific)
+<li>file_genes : gene-based features (body, TSS500) from GENCODE <https://www.gencodegenes.org/human/release_34lift37.html> (not liver specific)
 <li>file_chrom_state : chromatin states defined from various histone marks by the ROADMAP epigenomics project (liver specific) <https://egg2.wustl.edu/roadmap/web_portal/chr_state_learning.html#exp_18state>
 <li>file_CpG_context : methylation domains (HMD/PMD/LMR/UMR) defined from WGBS data (liver specific) <https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE113405&format=file&file=GSE113405%5FLIV%5FADLT%2EMethylSeekR%2Esegments%2Ebed%2Egz>
 <li>file_replication : replication timing deciles obtained from Repli-Seq data availbale on the ENCODE project data portal. Here we used Repli-Seq from HepG2 cell line accessible under GEO accession number GSM923446 (liver specific) <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM923446> 
 </ul>
 
-<p> The script used to extensively annotate CpG features (feature_table_script.R) is provided in the RUNNING_MethICA_example folder. It uses various types of (epi)genomic data (CpG islands, genes, chromatin states, methylation domains) to annotate the tissue-specific context of each CpG site:
+<p> The script used to extensively annotate CpG features (feature_table_script.R) is provided in the RUNNING_MethICA_example folder. It uses various types of (epi)genomic data (CpG islands, genes, chromatin states, methylation domains) to annotate the tissue-specific context of each CpG site.
 
-```{r CpGfeature_create_table, eval = FALSE, echo = TRUE}
-load(file.path(data.directory,'/data/hg19_genome_feature.Rdata'),verbose = T)
-load(file.path(data.directory,'/data/liver_specific_data.Rdata'),verbose = T)
-	
-CpG_table = data.frame(CpG_table)
-	
-## CpG_table must contain minimal column c("TargetID", "MAPINFO", "CHR")
-
-# typical script to add several CpG feature
-# - import segment table with feature of interest with minimal column "chr", "start", "end"
-# - use table.PosXSegm function with the names of column to add, and the names give in the final CpG_feature table
-
-# Chromatin state
-CpG_table = table.PosXSegm(table_Pos = CpG_table, table_Pos.chrom.col = "CHR", table_Pos.pos.col = "MAPINFO", 
-    		table_Segm = chrom_state, table_Segm.chrom.col = "chr", table_Segm.start.col = "start", 
-    		table_Segm.end.col = "end", cols_to_add = c("state", "domain"), names_cols_to_add = c("state", "domain"))
-
-# CpG context
-CpG_table = table.PosXSegm(table_Pos = CpG_table, table_Pos.chrom.col = "CHR", table_Pos.pos.col = "MAPINFO", 
-    		table_Segm = CpG_context, table_Segm.chrom.col = "chr", table_Segm.start.col = "start", 
-    		table_Segm.end.col = "end", cols_to_add = "CpG_context", names_cols_to_add = "CpG_context")
-
-	
-# CGI feature
-CpG_table = table.PosXSegm(table_Pos = CpG_table, table_Pos.chrom.col = "CHR", table_Pos.pos.col = "MAPINFO", 
-    		table_Segm = CGI, table_Segm.chrom.col = "chr", table_Segm.start.col = "start", 
-    		table_Segm.end.col = "end", cols_to_add = "cgi_feature", names_cols_to_add = "cgi_feature")
-
-# Genes feature
-CpG_table = table.PosXSegm(table_Pos = CpG_table, table_Pos.chrom.col = "CHR", table_Pos.pos.col = "MAPINFO", 
-    		table_Segm = Genes, table_Segm.chrom.col = "chr", table_Segm.start.col = "start", 
-    		table_Segm.end.col = "end", cols_to_add = c("gene_name", "gene_feature"), names_cols_to_add = c("gene_name", "gene_feature"))
-	
-# Replication timing
-CpG_table = table.PosXSegm(table_Pos = CpG_table, table_Pos.chrom.col = "CHR", table_Pos.pos.col = "MAPINFO", 
-    		table_Segm = replicatio, table_Segm.chrom.col = "chr", table_Segm.start.col = "start", 
-    		table_Segm.end.col = "end", cols_to_add = "decile", names_cols_to_add = "decile")
-	
-# Add nucleotide context and number of CpG in the adjacent sequence
-tmp_table_CpG = data.frame(CpG_table$TargetID , CpG_table$FORWARD_SEQUENCE, str_split(CpG_table$FORWARD_SEQUENCE, "\\[CG\\]", simplify = TRUE))
-colnames(tmp_table_CpG) = c("TargetID", "FORWARD_SEQUENCE", "FORWARD_SEQUENCE_pre", "FORWARD_SEQUENCE_post")
-		
-tmp_table_CpG$pre_context = stringr::str_sub(tmp_table_CpG$FORWARD_SEQUENCE_pre, -1, -1)
-tmp_table_CpG$post_context = stringr::str_sub(tmp_table_CpG$FORWARD_SEQUENCE_post, 1, 1)
-
-CpG_table$context = apply(tmp_table_CpG, 1, function(x){
-	if((x[5] == "C" | x[5] == "G")&(x[6] == "C" | x[6] == "G")){
-		return("SCGS")
-	}else if((x[5] == "C" | x[5] == "G")&(x[6] == "A" | x[6] == "T")){
-		return("SCGW")
-	}else if((x[5] == "A" | x[5] == "T")&(x[6] == "C" | x[6] == "G")){
-		return("SCGW")
-	}else{
-		return("WCGW")
-	}
-})
-		
-tmp_table_CpG$FORWARD_SEQUENCE = as.character(tmp_table_CpG$FORWARD_SEQUENCE)
-tmp_table_CpG$FORWARD_SEQUENCE_red = stringr::str_sub(tmp_table_CpG$FORWARD_SEQUENCE, 25, -25)
-tmp_table_CpG$FORWARD_SEQUENCE_red_post = stringr::str_sub(tmp_table_CpG$FORWARD_SEQUENCE_post, 2, -25)
-
-tmp_table_CpG = data.frame(tmp_table_CpG)
-CpG_table$nb_flanking_CpG = sapply(tmp_table_CpG$FORWARD_SEQUENCE_red, function(x){return(length(gregexpr("CG", x)[[1]])-1)})
-
-
-CpG_feature = CpG_table
-```
 
 # Extract methylation components with ICA
 
@@ -190,11 +124,11 @@ MC_object <- mc.extract(bval, nb_comp = 20, compute_stability = TRUE, nb_iterati
 # Extract the most contributing CpG sites for each MC
 MC_contrib_CpG <- mc.active.CpG(MC_object, method = "threshold")
 
-# Extract the most differentially methylated samples for each MC
-# Extract the most contributing samples for each MC based on absolute value of contribution 
-MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), output.directory = output.directory)
-# Extract the most contributing samples for each MC based on differential methylation level with reference sample (here normal samples)
-MC_active_sample = mc.activ.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = > MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE), output.directory = output.directory)
+# Extract the most contributing samples for each MC...
+# based on absolute value of contribution 
+MC_active_sample = mc.active.sample(MC_object, method = c("absolute", "reference")[1],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1))
+# or based on differential methylation level with reference sample (here normal samples)
+MC_active_sample = mc.active.sample(MC_object, method = c("absolute", "reference")[2],bval = bval , MC_contrib_CpG = MC_contrib_CpG, number = round(nrow(MC_object$Sample_contrib)*0.1), ref = grep("N", colnames(bval), value = TRUE))
 ```
 
 # Represent methylation changes
@@ -239,7 +173,7 @@ CpG_feature = enrich.CpG.domain(CpG_feature = CpG_feature, MC_contrib_CpG = MC_c
 
 ```{r assos_annot, eval = FALSE, echo = TRUE}
 # Association of MCs with clinical and molecular features
-Samples_association = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory, seuil_multi = 0.001)
+sample.assoc = mc.annot(MC_object, annot = annot , save = TRUE, output.directory = output.directory)
 ```
 
 Examples of possible representation with this results :
@@ -262,7 +196,7 @@ boxplot(MC_object$Sample_contrib[,"MC13"]~ annot[,"CTNNB1.alt"], col = c("grey30
 
 ```{r assos_annot_exemples_corrplot, eval = FALSE, echo = TRUE}
 #corrplot representation for univariate and multivariate analyses
-association.corrplot(pvaltab_uni = as.matrix(factoall(sample.assoc$pval_uni[,2:ncol(sample.assoc$pval_uni)])), pvaltab_multi = as.matrix(factoall(sample.assoc$pval_multi)))
+association.corrplot(pvaltab_uni = sample.assoc$pval_uni , pvaltab_multi = sample.assoc$pval_multi)
 ```
  
 ![methylation change](./corrplot_uni.png){width=60% height=60%}

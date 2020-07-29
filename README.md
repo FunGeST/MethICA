@@ -12,7 +12,7 @@ install.packages("devtools")
 
 library(devtools)
 
-devtools::install_github("FunGeST/MethICA")
+install_github("FunGeST/MethICA")
 
 ## Input files
 
