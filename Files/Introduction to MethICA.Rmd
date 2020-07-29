@@ -36,7 +36,7 @@ install_github("FunGeST/MethICA")
 ```
 # Dependencies
 
-<p>The R packages stringr, fastICA, cowplot, ggplot2, RColorBrewer, plotrix and broom are required to perform MethICA analysis</p>
+<p>The R packages stringr, fastICA, cowplot, ggplot2, RColorBrewer, plotrix, hexbin and broom are required to perform MethICA analysis</p>
 
 # Input data
 
