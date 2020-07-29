@@ -31,7 +31,7 @@ The latest version of the package can be installed from the FunGeST GitHub repos
 ```{r install, eval = FALSE, echo = TRUE}
 install.packages("devtools")
 library(devtools)
-devtools::install_github("FunGeST/MethICA")
+install_github("FunGeST/MethICA")
 
 ```
 # Dependencies
